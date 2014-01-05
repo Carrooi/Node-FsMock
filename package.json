@@ -1,0 +1,33 @@
+{
+	"name": "fs-mock",
+	"description": "Simple fs mock",
+	"version": "1.0.0",
+	"author": {
+		"name": "David Kudera",
+		"email": "sakren@gmail.com"
+	},
+	"keywords": [
+		"fs",
+		"testing",
+		"mock"
+	],
+	"repository": {
+		"type": "git",
+		"url": "git@github.com:sakren/node-fs-mock.git"
+	},
+	"license": "MIT",
+	"engines": {
+		"node": ">=0.9"
+	},
+	"main": "./lib/fs.js",
+	"dependencies": {
+		"escape-regexp": "0.0.1"
+	},
+	"devDependencies": {
+		"chai": "1.8.1",
+		"mocha": "1.16.2"
+	},
+	"scripts": {
+		"test": "mocha ./test/lib/index.js --reporter spec"
+	}
+}
