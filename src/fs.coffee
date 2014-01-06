@@ -1,4 +1,5 @@
 Stats = require './Stats'
+Errors = require './Errors'
 escape = require 'escape-regexp'
 
 isFunction = (obj) -> return Object.prototype.toString.call(obj) == '[object Function]'
@@ -20,48 +21,8 @@ class fs
 		@__setTree(tree)
 
 
-	__notImplemented: (method) ->
-		throw new Error "Method '#{method}' is not implemented."
-
-
-	__notFound: (path) ->
-		throw new Error "File or directory '#{path}' does not exists."
-
-
-	__alreadyExists: (path) ->
-		throw new Error "File or directory '#{path}' already exists."
-
-
-	__directoryExists: (path) ->
-		throw new Error "Directory '#{path}' already exists."
-
-
-	__notFile: (path) ->
-		throw new Error "Path '#{path}' is not a file."
-
-
-	__notDirectory: (path) ->
-		throw new Error "Path '#{path}' is not a directory."
-
-
-	__directoryNotEmpty: (path) ->
-		throw new Error "Directory '#{path}' is not empty."
-
-
-	__fdNotFound: (fd) ->
-		throw new Error "File descriptor #{fd} not exists."
-
-
 	__isFd: (fd) ->
 		return typeof @__fileDescriptors[fd] != 'undefined'
-
-
-	__fdNotWritable: (fd) ->
-		throw new Error "File '#{@__fileDescriptors[fd].path}' is not open for writing."
-
-
-	__fdNotReadable: (fd) ->
-		throw new Error "File '#{@__fileDescriptors[fd].path}' is not open for reading."
 
 
 	__hasSubPaths: (path) ->
@@ -171,10 +132,10 @@ class fs
 
 	renameSync: (oldPath, newPath) ->
 		if !@existsSync(oldPath)
-			@__notFound(oldPath)
+			Errors.notFound(oldPath)
 
 		if @existsSync(newPath)
-			@__alreadyExists(newPath)
+			Errors.alreadyExists(newPath)
 
 		@__data[newPath] = @__data[oldPath]
 		delete @__data[oldPath]
@@ -197,7 +158,7 @@ class fs
 
 	ftruncateSync: (fd, len) ->
 		if !@__isFd(fd)
-			@__fdNotFound(fd)
+			Errors.fdNotFound(fd)
 
 		item = @__data[@__fileDescriptors[fd].path]
 
@@ -223,10 +184,10 @@ class fs
 
 	truncateSync: (path, len) ->
 		if !@existsSync(path)
-			@__notFound(path)
+			Errors.notFound(path)
 
 		if !@statSync(path).isFile()
-			@__notFile(path)
+			Errors.notFile(path)
 
 		fd = @openSync(path, 'w')
 		@ftruncateSync(fd, len)
@@ -248,7 +209,7 @@ class fs
 
 	chownSync: (path, uid, gid) ->
 		if !@existsSync(path)
-			@__notFound(path)
+			Errors.notFound(path)
 
 		@__setAttributes(path, uid: uid, gid: gid)
 
@@ -264,7 +225,7 @@ class fs
 
 
 	fchownSync: (fd, uid, gid) ->
-		@__notImplemented 'fchown'
+		Errors.notImplemented 'fchown'
 
 
 	#*******************************************************************************************************************
@@ -278,7 +239,7 @@ class fs
 
 
 	lchownSync: (path, uid, gid) ->
-		@__notImplemented 'lchown'
+		Errors.notImplemented 'lchown'
 
 
 	#*******************************************************************************************************************
@@ -296,7 +257,7 @@ class fs
 
 	chmodSync: (path, mode) ->
 		if !@existsSync(path)
-			@__notFound(path)
+			Errors.notFound(path)
 
 		@__setAttributes(path, mode: mode)
 
@@ -312,7 +273,7 @@ class fs
 
 
 	fchmodSync: (fd, mode) ->
-		@__notImplemented 'fchmod'
+		Errors.notImplemented 'fchmod'
 
 
 	#*******************************************************************************************************************
@@ -326,7 +287,7 @@ class fs
 
 
 	lchmodSync: (path, mode) ->
-		@__notImplemented 'lchmod'
+		Errors.notImplemented 'lchmod'
 
 
 	#*******************************************************************************************************************
@@ -343,7 +304,7 @@ class fs
 
 	statSync: (path) ->
 		if !@existsSync(path)
-			@__notFound(path)
+			Errors.notFound(path)
 
 		return @__data[path].stats
 
@@ -359,7 +320,7 @@ class fs
 
 
 	lstatSync: (path) ->
-		@__notImplemented 'lstat'
+		Errors.notImplemented 'lstat'
 
 
 	#*******************************************************************************************************************
@@ -373,7 +334,7 @@ class fs
 
 
 	fstatSync: (path) ->
-		@__notImplemented 'fstat'
+		Errors.notImplemented 'fstat'
 
 
 	#*******************************************************************************************************************
@@ -387,7 +348,7 @@ class fs
 
 
 	linkSync: (srcpath, dstpath) ->
-		@__notImplemented 'link'
+		Errors.notImplemented 'link'
 
 
 	#*******************************************************************************************************************
@@ -405,7 +366,7 @@ class fs
 
 
 	symlinkSync: (srcpath, dstpath, type = null) ->
-		@__notImplemented 'symlink'
+		Errors.notImplemented 'symlink'
 
 
 	#*******************************************************************************************************************
@@ -419,7 +380,7 @@ class fs
 
 
 	readlinkSync: (path) ->
-		@__notImplemented 'readlink'
+		Errors.notImplemented 'readlink'
 
 
 	#*******************************************************************************************************************
@@ -437,7 +398,7 @@ class fs
 
 
 	realpathSync: (path, cache = null) ->
-		@__notImplemented 'realpath'
+		Errors.notImplemented 'realpath'
 
 
 	#*******************************************************************************************************************
@@ -455,10 +416,10 @@ class fs
 
 	unlinkSync: (path) ->
 		if !@existsSync(path)
-			@__notFound(path)
+			Errors.notFound(path)
 
 		if !@statSync(path).isFile()
-			@__notFile(path)
+			Errors.notFile(path)
 
 		delete @__data[path]
 
@@ -478,13 +439,13 @@ class fs
 
 	rmdirSync: (path) ->
 		if !@existsSync(path)
-			@__notFound(path)
+			Errors.notFound(path)
 
 		if !@statSync(path).isDirectory()
-			@__notDirectory(path)
+			Errors.notDirectory(path)
 
 		if @__hasSubPaths(path)
-			@__directoryNotEmpty(path)
+			Errors.directoryNotEmpty(path)
 
 		delete @__data[path]
 
@@ -508,7 +469,7 @@ class fs
 
 	mkdirSync: (path, mode = null) ->
 		if @existsSync(path)
-			@__alreadyExists(path)
+			Errors.alreadyExists(path)
 
 		@__addPath(path, mode: mode, 'directory')
 		@__expandPath(path)
@@ -528,10 +489,10 @@ class fs
 
 	readdirSync: (path) ->
 		if !@existsSync(path)
-			@__notFound(path)
+			Errors.notFound(path)
 
 		if !@statSync(path).isDirectory()
-			@__notDirectory(path)
+			Errors.notDirectory(path)
 
 		path = escape(path)
 		files = []
@@ -558,7 +519,7 @@ class fs
 
 	closeSync: (fd) ->
 		if !@__isFd(fd)
-			@__fdNotFound(fd)
+			Errors.fdNotFound(fd)
 
 		delete @__fileDescriptors[fd]
 
@@ -581,13 +542,13 @@ class fs
 
 	openSync: (path, flags, mode = null) ->
 		if @existsSync(path) && @statSync(path).isDirectory()
-			@__directoryExists(path)
+			Errors.directoryExists(path)
 
 		if flags in ['r', 'r+'] && !@existsSync(path)
-			@__notFound(path)
+			Errors.notFound(path)
 
 		if flags in ['wx', 'wx+', 'ax', 'ax+'] && @existsSync(path)
-			@__alreadyExists(path)
+			Errors.alreadyExists(path)
 
 		if flags in ['w', 'w+', 'a', 'a+'] && !@existsSync(path)
 			options = {}
@@ -614,7 +575,7 @@ class fs
 
 
 	utimesSync: (path, atime, mtime) ->
-		@__notImplemented 'utime'
+		Errors.notImplemented 'utime'
 
 
 	#*******************************************************************************************************************
@@ -628,7 +589,7 @@ class fs
 
 
 	futimesSync: (fd, atime, mtime) ->
-		@__notImplemented 'futime'
+		Errors.notImplemented 'futime'
 
 
 	#*******************************************************************************************************************
@@ -642,7 +603,7 @@ class fs
 
 
 	fsyncSync: (fd) ->
-		@__notImplemented 'fsync'
+		Errors.notImplemented 'fsync'
 
 
 	#*******************************************************************************************************************
@@ -661,12 +622,14 @@ class fs
 	# todo: position
 	writeSync: (fd, buffer, offset, length, position) ->
 		if !@__isFd(fd)
-			@__fdNotFound(fd)
+			Errors.fdNotFound(fd)
+
+		path = @__fileDescriptors[fd].path
 
 		if !@__isWritable(@__fileDescriptors[fd].flags)
-			@__fdNotWritable(fd)
+			Errors.notWritable(path)
 
-		item = @__data[@__fileDescriptors[fd].path]
+		item = @__data[path]
 		data = buffer.toString('utf8', offset).substr(0, length)
 
 		item.data = new Buffer(data)
@@ -690,12 +653,14 @@ class fs
 
 	readSync: (fd, buffer, offset, length, position = 0) ->
 		if !@__isFd(fd)
-			@__fdNotFound(fd)
+			Errors.fdNotFound(fd)
+
+		path = @__fileDescriptors[fd].path
 
 		if !@__isReadable(@__fileDescriptors[fd].flags)
-			@__fdNotReadable(fd)
+			Errors.notReadable(path)
 
-		item = @__data[@__fileDescriptors[fd].path]
+		item = @__data[path]
 
 		data = item.data.toString('utf8')
 		data = data.substr(position, length)
@@ -799,7 +764,7 @@ class fs
 			@__addPath(filename, data: '', mode: options.mode)
 
 		if !@statSync(filename).isFile()
-			@__notFile(filename)
+			Errors.notFile(filename)
 
 		if data instanceof Buffer
 			data = data.toString('utf8')
@@ -818,7 +783,7 @@ class fs
 			listener = options
 			options = null
 
-		@__notImplemented 'watchFile'
+		Errors.notImplemented 'watchFile'
 
 
 	#*******************************************************************************************************************
@@ -827,7 +792,7 @@ class fs
 
 
 	unwatchFile: (filename, listener = null) ->
-		@__notImplemented 'unwatchFile'
+		Errors.notImplemented 'unwatchFile'
 
 
 	#*******************************************************************************************************************
@@ -840,7 +805,7 @@ class fs
 			listener = options
 			options = null
 
-		@__notImplemented 'watch'
+		Errors.notImplemented 'watch'
 
 
 	#*******************************************************************************************************************
@@ -862,7 +827,7 @@ class fs
 
 
 	createReadStream: (path, options = null) ->
-		@__notImplemented 'createReadStream'
+		Errors.notImplemented 'createReadStream'
 
 
 	#*******************************************************************************************************************
@@ -871,7 +836,7 @@ class fs
 
 
 	createWriteStream: (path, options = null) ->
-		@__notImplemented 'createWriteStream'
+		Errors.notImplemented 'createWriteStream'
 
 
 module.exports = fs
