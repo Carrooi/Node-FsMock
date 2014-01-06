@@ -46,7 +46,7 @@ class fs
 
 	_setAttributes: (path, attributes = {}) ->
 		for name, value of attributes
-			@_data[path][name] = value
+			@_data[path].stats[name] = value
 
 		@_data[path].stats._modifiedAttributes()
 
@@ -64,10 +64,9 @@ class fs
 				type = 'file'
 
 		@_data[path] =
-			mode: data.mode
-			uid: 100
-			gid: 100
 			stats: new Stats(path, data.stats)
+
+		@_data[path].stats.mode = data.mode
 
 		if type == 'directory'
 			@_data[path].stats._isDirectory = true

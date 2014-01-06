@@ -13,13 +13,13 @@ class Stats
 
 	ino: 0
 
-	mode: 0
+	mode: 438
 
 	nlink: 0
 
-	uid: 0
+	uid: 100
 
-	gid: 0
+	gid: 100
 
 	rdev: 0
 

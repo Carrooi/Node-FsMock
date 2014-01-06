@@ -131,8 +131,8 @@ describe 'fs', ->
 		it 'should change uid and gid', (done) ->
 			fs._setTree('/var/www >>': {})
 			fs.chown('/var/www', 300, 200, ->
-				expect(fs._data['/var/www'].uid).to.be.equal(300)
-				expect(fs._data['/var/www'].gid).to.be.equal(200)
+				expect(fs._data['/var/www'].stats.uid).to.be.equal(300)
+				expect(fs._data['/var/www'].stats.gid).to.be.equal(200)
 				done()
 			)
 
@@ -149,8 +149,8 @@ describe 'fs', ->
 			fs._setTree('/var/www >>': {})
 			fs.open('/var/www', 'r', (err, fd) ->
 				fs.fchown(fd, 300, 400, ->
-					expect(fs._data['/var/www'].uid).to.be.equal(300)
-					expect(fs._data['/var/www'].gid).to.be.equal(400)
+					expect(fs._data['/var/www'].stats.uid).to.be.equal(300)
+					expect(fs._data['/var/www'].stats.gid).to.be.equal(400)
 					done()
 				)
 			)
@@ -167,7 +167,7 @@ describe 'fs', ->
 		it 'should change mode', (done) ->
 			fs._setTree('/var/www >>': {})
 			fs.chmod('/var/www', 777, ->
-				expect(fs._data['/var/www'].mode).to.be.equal(777)
+				expect(fs._data['/var/www'].stats.mode).to.be.equal(777)
 				done()
 			)
 
@@ -184,7 +184,7 @@ describe 'fs', ->
 			fs._setTree('/var/www/index.php': {})
 			fs.open('/var/www/index.php', 'r', (err, fd) ->
 				fs.fchmod(1, 777, ->
-					expect(fs._data['/var/www/index.php'].mode).to.be.equal(777)
+					expect(fs._data['/var/www/index.php'].stats.mode).to.be.equal(777)
 					done()
 				)
 			)

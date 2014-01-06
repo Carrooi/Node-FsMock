@@ -164,8 +164,8 @@
           '/var/www >>': {}
         });
         return fs.chown('/var/www', 300, 200, function() {
-          expect(fs._data['/var/www'].uid).to.be.equal(300);
-          expect(fs._data['/var/www'].gid).to.be.equal(200);
+          expect(fs._data['/var/www'].stats.uid).to.be.equal(300);
+          expect(fs._data['/var/www'].stats.gid).to.be.equal(200);
           return done();
         });
       });
@@ -184,8 +184,8 @@
         });
         return fs.open('/var/www', 'r', function(err, fd) {
           return fs.fchown(fd, 300, 400, function() {
-            expect(fs._data['/var/www'].uid).to.be.equal(300);
-            expect(fs._data['/var/www'].gid).to.be.equal(400);
+            expect(fs._data['/var/www'].stats.uid).to.be.equal(300);
+            expect(fs._data['/var/www'].stats.gid).to.be.equal(400);
             return done();
           });
         });
@@ -204,7 +204,7 @@
           '/var/www >>': {}
         });
         return fs.chmod('/var/www', 777, function() {
-          expect(fs._data['/var/www'].mode).to.be.equal(777);
+          expect(fs._data['/var/www'].stats.mode).to.be.equal(777);
           return done();
         });
       });
@@ -223,7 +223,7 @@
         });
         return fs.open('/var/www/index.php', 'r', function(err, fd) {
           return fs.fchmod(1, 777, function() {
-            expect(fs._data['/var/www/index.php'].mode).to.be.equal(777);
+            expect(fs._data['/var/www/index.php'].stats.mode).to.be.equal(777);
             return done();
           });
         });
