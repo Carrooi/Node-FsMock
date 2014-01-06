@@ -1,11 +1,13 @@
+Errors = require './Errors'
+
 class Stats
 
 
-	__path: null
+	_path: null
 
-	__isFile: false
+	_isFile: false
 
-	__isDirectory: false
+	_isDirectory: false
 
 	dev: 0
 
@@ -34,7 +36,7 @@ class Stats
 	ctime: null
 
 
-	constructor: (@__path, data = {}) ->
+	constructor: (@_path, data = {}) ->
 		@atime = new Date
 		@mtime = new Date
 		@ctime = new Date
@@ -44,49 +46,45 @@ class Stats
 				@[name] = value
 
 
-	__notImplemented: (method) ->
-		throw new Error "Method '#{method}' is not implemented."
-
-
-	__modified: ->
+	_modified: ->
 		@mtime = new Date
 		@ctime = new Date
 
 
-	__modifiedAttributes: ->
+	_modifiedAttributes: ->
 		@ctime = new Date
 
 
-	__accessed: ->
+	_accessed: ->
 		@atime = new Date
 
 
 	isFile: ->
-		return @__isFile
+		return @_isFile
 
 
 	isDirectory: ->
-		return @__isDirectory
+		return @_isDirectory
 
 
 	isBlockDevice: ->
-		@__notImplemented 'isBlockDevice'
+		Errors.notImplemented 'isBlockDevice'
 
 
 	isCharacterDevice: ->
-		@__notImplemented 'isCharacterDevice'
+		Errors.notImplemented 'isCharacterDevice'
 
 
 	isSymbolicLink: ->
-		@__notImplemented 'isSymbolicLink'
+		Errors.notImplemented 'isSymbolicLink'
 
 
 	isFIFO: ->
-		@__notImplemented 'isFIFO'
+		Errors.notImplemented 'isFIFO'
 
 
 	isSocket: ->
-		@__notImplemented 'isSocket'
+		Errors.notImplemented 'isSocket'
 
 
 module.exports = Stats

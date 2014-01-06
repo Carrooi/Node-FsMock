@@ -12,9 +12,9 @@
     beforeEach(function() {
       return fs = new FS;
     });
-    describe('#__setTree()', function() {
+    describe('#_setTree()', function() {
       return it('should parse input data', function() {
-        fs.__setTree({
+        fs._setTree({
           '/var >>': {
             stats: {
               atime: new Date
@@ -36,11 +36,11 @@
             }
           }
         });
-        expect(fs.__data).to.have.keys(['/var', '/var/www/index.php', '/var/www', '/home/david/documents/school/projects', '/home/david/documents/school', '/home/david/documents', '/home/david', '/home', '/home/john', '/home/john/passwords.txt']);
-        expect(fs.__data['/var/www/index.php'].stats.isFile()).to.be["true"];
-        expect(fs.__data['/var/www'].stats.isDirectory()).to.be["true"];
-        expect(fs.__data['/home/john'].stats.isDirectory()).to.be["true"];
-        return expect(fs.__data['/home/john/passwords.txt'].stats.isFile()).to.be["true"];
+        expect(fs._data).to.have.keys(['/var', '/var/www/index.php', '/var/www', '/home/david/documents/school/projects', '/home/david/documents/school', '/home/david/documents', '/home/david', '/home', '/home/john', '/home/john/passwords.txt']);
+        expect(fs._data['/var/www/index.php'].stats.isFile()).to.be["true"];
+        expect(fs._data['/var/www'].stats.isDirectory()).to.be["true"];
+        expect(fs._data['/home/john'].stats.isDirectory()).to.be["true"];
+        return expect(fs._data['/home/john/passwords.txt'].stats.isFile()).to.be["true"];
       });
     });
     describe('#rename()', function() {
@@ -52,7 +52,7 @@
         });
       });
       it('should return an error if path with new name already exists', function(done) {
-        fs.__setTree({
+        fs._setTree({
           '/var/www >>': {},
           '/var/old_www >>': {}
         });
@@ -63,13 +63,13 @@
         });
       });
       return it('should rename path', function(done) {
-        fs.__setTree({
+        fs._setTree({
           '/var/www >>': {}
         });
         return fs.rename('/var/www', '/var/old_www', function(err) {
           expect(err).to.not.exists;
-          expect(fs.__data['/var/www']).not.to.exists;
-          expect(fs.__data).to.have.keys(['/var', '/var/old_www']);
+          expect(fs._data['/var/www']).not.to.exists;
+          expect(fs._data).to.have.keys(['/var', '/var/old_www']);
           return done();
         });
       });
@@ -84,7 +84,7 @@
       });
       it('should return an error if file is not opened for writening', function(done) {
         var fd;
-        fs.__setTree({
+        fs._setTree({
           '/var/www/index.php': {}
         });
         fd = fs.openSync('/var/www/index.php', 'r');
@@ -96,14 +96,14 @@
       });
       return it('should truncate file data', function(done) {
         var fd;
-        fs.__setTree({
+        fs._setTree({
           '/var/www/index.php': {
             data: 'hello word'
           }
         });
         fd = fs.openSync('/var/www/index.php', 'w+');
         return fs.ftruncate(fd, 5, function() {
-          expect(fs.__data['/var/www/index.php'].data.toString('utf8')).to.be.equal('hello');
+          expect(fs._data['/var/www/index.php'].data.toString('utf8')).to.be.equal('hello');
           return done();
         });
       });
@@ -117,7 +117,7 @@
         });
       });
       it('should return an error if path is not file', function(done) {
-        fs.__setTree({
+        fs._setTree({
           '/var/www >>': {}
         });
         return fs.truncate('/var/www', 10, function(err) {
@@ -127,24 +127,24 @@
         });
       });
       it('should leave file data if needed length is larger than data length', function(done) {
-        fs.__setTree({
+        fs._setTree({
           '/var/www/index.php': {
             data: 'hello word'
           }
         });
         return fs.truncate('/var/www/index.php', 15, function() {
-          expect(fs.__data['/var/www/index.php'].data.toString('utf8')).to.be.equal('hello word');
+          expect(fs._data['/var/www/index.php'].data.toString('utf8')).to.be.equal('hello word');
           return done();
         });
       });
       return it('should truncate file data', function(done) {
-        fs.__setTree({
+        fs._setTree({
           '/var/www/index.php': {
             data: 'hello word'
           }
         });
         return fs.truncate('/var/www/index.php', 5, function() {
-          expect(fs.__data['/var/www/index.php'].data.toString('utf8')).to.be.equal('hello');
+          expect(fs._data['/var/www/index.php'].data.toString('utf8')).to.be.equal('hello');
           return done();
         });
       });
@@ -158,12 +158,12 @@
         });
       });
       return it('should change uid and gid', function(done) {
-        fs.__setTree({
+        fs._setTree({
           '/var/www >>': {}
         });
         return fs.chown('/var/www', 300, 200, function() {
-          expect(fs.__data['/var/www'].uid).to.be.equal(300);
-          expect(fs.__data['/var/www'].gid).to.be.equal(200);
+          expect(fs._data['/var/www'].uid).to.be.equal(300);
+          expect(fs._data['/var/www'].gid).to.be.equal(200);
           return done();
         });
       });
@@ -177,11 +177,11 @@
         });
       });
       return it('should change mode', function(done) {
-        fs.__setTree({
+        fs._setTree({
           '/var/www >>': {}
         });
         return fs.chmod('/var/www', 777, function() {
-          expect(fs.__data['/var/www'].mode).to.be.equal(777);
+          expect(fs._data['/var/www'].mode).to.be.equal(777);
           return done();
         });
       });
@@ -195,7 +195,7 @@
         });
       });
       return it('should return stats object for path', function(done) {
-        fs.__setTree({
+        fs._setTree({
           '/var/www/index.php': {}
         });
         return fs.stat('/var/www/index.php', function(err, stats) {
@@ -213,7 +213,7 @@
         });
       });
       it('should return an error if path is not file', function(done) {
-        fs.__setTree({
+        fs._setTree({
           '/var/www >>': {}
         });
         return fs.unlink('/var/www', function(err) {
@@ -223,11 +223,11 @@
         });
       });
       return it('should remove file', function(done) {
-        fs.__setTree({
+        fs._setTree({
           '/var/www/index.php': {}
         });
         return fs.unlink('/var/www/index.php', function() {
-          expect(fs.__data).to.have.keys(['/var/www', '/var']);
+          expect(fs._data).to.have.keys(['/var/www', '/var']);
           return done();
         });
       });
@@ -241,7 +241,7 @@
         });
       });
       it('should return an error if path is not directory', function(done) {
-        fs.__setTree({
+        fs._setTree({
           '/var/www/index.php': {}
         });
         return fs.rmdir('/var/www/index.php', function(err) {
@@ -251,7 +251,7 @@
         });
       });
       it('should return an error if directory is not empty', function(done) {
-        fs.__setTree({
+        fs._setTree({
           '/var/www >>': {},
           '/var/www/index.php': {}
         });
@@ -262,18 +262,18 @@
         });
       });
       return it('should remove directory', function(done) {
-        fs.__setTree({
+        fs._setTree({
           '/var/www >>': {}
         });
         return fs.rmdir('/var/www', function() {
-          expect(fs.__data).to.have.keys(['/var']);
+          expect(fs._data).to.have.keys(['/var']);
           return done();
         });
       });
     });
     describe('#mkdir()', function() {
       it('should return an error if path already exists', function(done) {
-        fs.__setTree({
+        fs._setTree({
           '/var/www': {}
         });
         return fs.mkdir('/var/www', function(err) {
@@ -284,7 +284,7 @@
       });
       return it('should create new directory', function(done) {
         return fs.mkdir('/var/www', function() {
-          expect(fs.__data).to.have.keys(['/var', '/var/www']);
+          expect(fs._data).to.have.keys(['/var', '/var/www']);
           return done();
         });
       });
@@ -298,7 +298,7 @@
         });
       });
       it('should throw an error if path is not directory', function(done) {
-        fs.__setTree({
+        fs._setTree({
           '/var/www/index.php': {}
         });
         return fs.readdir('/var/www/index.php', function(err) {
@@ -308,7 +308,7 @@
         });
       });
       return it('should load all files and directories from directory', function(done) {
-        fs.__setTree({
+        fs._setTree({
           '/var/www >>': {
             paths: {
               'index.php': {},
@@ -323,8 +323,8 @@
         });
         return fs.readdir('/var/www', function(err, files) {
           expect(files).to.be.eql(['/var/www/index.php', '/var/www/project']);
-          expect(fs.__data['/var/www/index.php'].stats.isFile()).to.be["true"];
-          expect(fs.__data['/var/www/project'].stats.isDirectory()).to.be["true"];
+          expect(fs._data['/var/www/index.php'].stats.isFile()).to.be["true"];
+          expect(fs._data['/var/www/project'].stats.isDirectory()).to.be["true"];
           return done();
         });
       });
@@ -339,19 +339,19 @@
       });
       return it('should close opened file', function(done) {
         var fd;
-        fs.__setTree({
+        fs._setTree({
           '/var/www/index.php': {}
         });
         fd = fs.openSync('/var/www/index.php', 'r');
         return fs.close(fd, function() {
-          expect(fs.__fileDescriptors).to.be.eql([]);
+          expect(fs._fileDescriptors).to.be.eql([]);
           return done();
         });
       });
     });
     describe('#open()', function() {
       it('should return an error if directory with same name already exists', function(done) {
-        fs.__setTree({
+        fs._setTree({
           '/var/www >>': {}
         });
         return fs.open('/var/www', 'r', function(err) {
@@ -375,7 +375,7 @@
         });
       });
       it('should return an error if file already exists (flag: wx)', function(done) {
-        fs.__setTree({
+        fs._setTree({
           '/var/www/index.php': {}
         });
         return fs.open('/var/www/index.php', 'wx', function(err) {
@@ -385,7 +385,7 @@
         });
       });
       it('should return an error if file already exists (flag: wx+)', function(done) {
-        fs.__setTree({
+        fs._setTree({
           '/var/www/index.php': {}
         });
         return fs.open('/var/www/index.php', 'wx+', function(err) {
@@ -395,7 +395,7 @@
         });
       });
       it('should return an error if file already exists (flag: ax)', function(done) {
-        fs.__setTree({
+        fs._setTree({
           '/var/www/index.php': {}
         });
         return fs.open('/var/www/index.php', 'ax', function(err) {
@@ -405,7 +405,7 @@
         });
       });
       it('should return an error if file already exists (flag: ax+)', function(done) {
-        fs.__setTree({
+        fs._setTree({
           '/var/www/index.php': {}
         });
         return fs.open('/var/www/index.php', 'ax+', function(err) {
@@ -448,7 +448,7 @@
         });
       });
       it('should return an error if file is not open for writing', function(done) {
-        fs.__setTree({
+        fs._setTree({
           '/var/www/index.php': {}
         });
         return fs.open('/var/www/index.php', 'r', function(err, fd) {
@@ -460,14 +460,14 @@
         });
       });
       return it('should write data to file', function(done) {
-        fs.__setTree({
+        fs._setTree({
           '/var/www/index.php': {
             data: 'hello word'
           }
         });
         return fs.open('/var/www/index.php', 'w', function(err, fd) {
           return fs.write(fd, new Buffer('hello'), 0, 5, 0, function() {
-            expect(fs.__data['/var/www/index.php'].data.toString('utf8')).to.be.equal('hello');
+            expect(fs._data['/var/www/index.php'].data.toString('utf8')).to.be.equal('hello');
             return done();
           });
         });
@@ -482,7 +482,7 @@
         });
       });
       it('should return an error if file is not open for reading', function(done) {
-        fs.__setTree({
+        fs._setTree({
           '/var/www/index.php': {}
         });
         return fs.open('/var/www/index.php', 'w', function(err, fd) {
@@ -494,7 +494,7 @@
         });
       });
       it('should read all data', function(done) {
-        fs.__setTree({
+        fs._setTree({
           '/var/www/index.php': {
             data: 'hello word'
           }
@@ -512,7 +512,7 @@
         });
       });
       return it('should read all data byte by byte', function(done) {
-        fs.__setTree({
+        fs._setTree({
           '/var/www/index.php': {
             data: 'hello word'
           }
@@ -540,7 +540,7 @@
         });
       });
       it('should throw an error if path is not file', function(done) {
-        fs.__setTree({
+        fs._setTree({
           '/var/www >>': {}
         });
         return fs.readFile('/var/www', function(err) {
@@ -552,7 +552,7 @@
       it('should read data from file as buffer', function(done) {
         var s;
         s = '<?php echo "hello";';
-        fs.__setTree({
+        fs._setTree({
           '/var/www/index.php': {
             data: s
           }
@@ -566,7 +566,7 @@
       return it('should read data from file as string', function(done) {
         var s;
         s = '<?php echo "hello";';
-        fs.__setTree({
+        fs._setTree({
           '/var/www/index.php': {
             data: s
           }
@@ -581,7 +581,7 @@
     });
     describe('#writeFile()', function() {
       it('should return an error if directory with same name already exists', function(done) {
-        fs.__setTree({
+        fs._setTree({
           '/var/www >>': {}
         });
         return fs.writeFile('/var/www', '', function(err) {
@@ -592,26 +592,26 @@
       });
       it('should create new file', function(done) {
         return fs.writeFile('/var/www/index.php', '', function() {
-          expect(fs.__data).to.have.keys(['/var/www/index.php', '/var/www', '/var']);
-          expect(fs.__data['/var/www/index.php'].stats.isFile()).to.be["true"];
+          expect(fs._data).to.have.keys(['/var/www/index.php', '/var/www', '/var']);
+          expect(fs._data['/var/www/index.php'].stats.isFile()).to.be["true"];
           return done();
         });
       });
       return it('should rewrite old file', function(done) {
-        fs.__setTree({
+        fs._setTree({
           '/var/www/index.php': {
             data: 'old'
           }
         });
         return fs.writeFile('/var/www/index.php', 'new', function() {
-          expect(fs.__data['/var/www/index.php'].data.toString('utf8')).to.be.equal('new');
+          expect(fs._data['/var/www/index.php'].data.toString('utf8')).to.be.equal('new');
           return done();
         });
       });
     });
     describe('#appendFile()', function() {
       it('should return an error if path is not file', function(done) {
-        fs.__setTree({
+        fs._setTree({
           '/var/www >>': {}
         });
         return fs.appendFile('/var/www', '', function(err) {
@@ -622,18 +622,18 @@
       });
       it('should create new file', function(done) {
         return fs.appendFile('/var/www/index.php', 'hello', function() {
-          expect(fs.__data['/var/www/index.php'].data.toString('utf8')).to.be.equal('hello');
+          expect(fs._data['/var/www/index.php'].data.toString('utf8')).to.be.equal('hello');
           return done();
         });
       });
       return it('should append data to file with buffer', function(done) {
-        fs.__setTree({
+        fs._setTree({
           '/var/www/index.php': {
             data: 'one'
           }
         });
         return fs.appendFile('/var/www/index.php', new Buffer(', two'), function() {
-          expect(fs.__data['/var/www/index.php'].data.toString('utf8')).to.be.equal('one, two');
+          expect(fs._data['/var/www/index.php'].data.toString('utf8')).to.be.equal('one, two');
           return done();
         });
       });
@@ -646,7 +646,7 @@
         });
       });
       return it('should return true when file exists', function(done) {
-        fs.__setTree({
+        fs._setTree({
           '/var/www/index.php': {}
         });
         fs.exists('/var/www/index.php', function(exists) {

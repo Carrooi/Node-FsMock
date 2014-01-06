@@ -10,40 +10,40 @@ isAppendable = (flags) -> return flags in ['a', 'ax', 'a+', 'ax+']
 class fs
 
 
-	__data: null
+	_data: null
 
-	__fileDescriptors: null
+	_fileDescriptors: null
 
-	__fileDescriptorsCounter: 0
+	_fileDescriptorsCounter: 0
 
 
 	constructor: (tree = {}) ->
-		@__data = {}
-		@__fileDescriptors = []
+		@_data = {}
+		@_fileDescriptors = []
 
-		@__setTree(tree)
-
-
-	__isFd: (fd) ->
-		return typeof @__fileDescriptors[fd] != 'undefined'
+		@_setTree(tree)
 
 
-	__hasSubPaths: (path) ->
-		for found, data of @__data
+	_hasFd: (fd) ->
+		return typeof @_fileDescriptors[fd] != 'undefined'
+
+
+	_hasSubPaths: (path) ->
+		for found, data of @_data
 			if path != found && found.match(new RegExp('^' + escape(path))) != null
 				return true
 
 		return false
 
 
-	__setAttributes: (path, attributes = {}) ->
+	_setAttributes: (path, attributes = {}) ->
 		for name, value of attributes
-			@__data[path][name] = value
+			@_data[path][name] = value
 
-		@__data[path].stats.__modifiedAttributes()
+		@_data[path].stats._modifiedAttributes()
 
 
-	__addPath: (path, data = {}, type = null) ->
+	_addPath: (path, data = {}, type = null) ->
 		if typeof data.stats == 'undefined' then data.stats = {}
 		if typeof data.mode == 'undefined' then data.mode = 777
 		if typeof data.encoding == 'undefined' then data.encoding = 'utf8'
@@ -55,38 +55,38 @@ class fs
 			else
 				type = 'file'
 
-		@__data[path] =
+		@_data[path] =
 			mode: data.mode
 			uid: 100
 			gid: 100
 			stats: new Stats(path, data.stats)
 
 		if type == 'directory'
-			@__data[path].stats.__isDirectory = true
+			@_data[path].stats._isDirectory = true
 
 			if typeof data.paths != 'undefined'
 				for subPath, subData of data.paths
-					@__addPath(path + '/' + subPath, subData)
+					@_addPath(path + '/' + subPath, subData)
 
 		else if type == 'file'
-			@__data[path].stats.__isFile = true
+			@_data[path].stats._isFile = true
 
 			if typeof data.data == 'undefined'
-				@__data[path].data = new Buffer('', data.encoding)
+				@_data[path].data = new Buffer('', data.encoding)
 			else if data.data instanceof Buffer
-				@__data[path].data = data.data
+				@_data[path].data = data.data
 			else
-				@__data[path].data = new Buffer(data.data, data.encoding)
+				@_data[path].data = new Buffer(data.data, data.encoding)
 
-			@__data[path].stats.blksize = @__data[path].stats.size = @__data[path].data.length
-
-
-	__expandPaths: ->
-		for path, data of @__data
-			@__expandPath(path)
+			@_data[path].stats.blksize = @_data[path].stats.size = @_data[path].data.length
 
 
-	__expandPath: (path) ->
+	_expandPaths: ->
+		for path, data of @_data
+			@_expandPath(path)
+
+
+	_expandPath: (path) ->
 		match = path.match(/\//g)
 
 		if match != null && match.length > 1
@@ -95,17 +95,17 @@ class fs
 				position = sub.lastIndexOf('/')
 				if position > 0
 					sub = sub.substring(0, sub.lastIndexOf('/'))
-					if typeof @__data[sub] == 'undefined'
-						@__addPath(sub + ' >>')
+					if typeof @_data[sub] == 'undefined'
+						@_addPath(sub + ' >>')
 				else
 					sub = null
 
 
-	__setTree: (tree) ->
+	_setTree: (tree) ->
 		for path, data of tree
-			@__addPath(path, data)
+			@_addPath(path, data)
 
-		@__expandPaths()
+		@_expandPaths()
 
 
 	#*******************************************************************************************************************
@@ -128,10 +128,10 @@ class fs
 		if @existsSync(newPath)
 			Errors.alreadyExists(newPath)
 
-		@__data[newPath] = @__data[oldPath]
-		delete @__data[oldPath]
+		@_data[newPath] = @_data[oldPath]
+		delete @_data[oldPath]
 
-		@__data[newPath].stats.__modifiedAttributes()
+		@_data[newPath].stats._modifiedAttributes()
 
 
 	#*******************************************************************************************************************
@@ -148,10 +148,10 @@ class fs
 
 
 	ftruncateSync: (fd, len) ->
-		if !@__isFd(fd)
+		if !@_hasFd(fd)
 			Errors.fdNotFound(fd)
 
-		item = @__data[@__fileDescriptors[fd].path]
+		item = @_data[@_fileDescriptors[fd].path]
 
 		data = item.data.toString('utf8')
 		if item.data.length > len
@@ -202,7 +202,7 @@ class fs
 		if !@existsSync(path)
 			Errors.notFound(path)
 
-		@__setAttributes(path, uid: uid, gid: gid)
+		@_setAttributes(path, uid: uid, gid: gid)
 
 
 	#*******************************************************************************************************************
@@ -250,7 +250,7 @@ class fs
 		if !@existsSync(path)
 			Errors.notFound(path)
 
-		@__setAttributes(path, mode: mode)
+		@_setAttributes(path, mode: mode)
 
 
 	#*******************************************************************************************************************
@@ -297,7 +297,7 @@ class fs
 		if !@existsSync(path)
 			Errors.notFound(path)
 
-		return @__data[path].stats
+		return @_data[path].stats
 
 
 	#*******************************************************************************************************************
@@ -412,7 +412,7 @@ class fs
 		if !@statSync(path).isFile()
 			Errors.notFile(path)
 
-		delete @__data[path]
+		delete @_data[path]
 
 
 	#*******************************************************************************************************************
@@ -435,10 +435,10 @@ class fs
 		if !@statSync(path).isDirectory()
 			Errors.notDirectory(path)
 
-		if @__hasSubPaths(path)
+		if @_hasSubPaths(path)
 			Errors.directoryNotEmpty(path)
 
-		delete @__data[path]
+		delete @_data[path]
 
 
 	#*******************************************************************************************************************
@@ -462,8 +462,8 @@ class fs
 		if @existsSync(path)
 			Errors.alreadyExists(path)
 
-		@__addPath(path, mode: mode, 'directory')
-		@__expandPath(path)
+		@_addPath(path, mode: mode, 'directory')
+		@_expandPath(path)
 
 
 	#*******************************************************************************************************************
@@ -488,7 +488,7 @@ class fs
 		path = escape(path)
 		files = []
 
-		for name, data of @__data
+		for name, data of @_data
 			if name != path && (match = name.match(new RegExp('^' + path + '(.+)$'))) != null && match[1].match(/\//g).length == 1
 				files.push(name)
 
@@ -509,10 +509,10 @@ class fs
 
 
 	closeSync: (fd) ->
-		if !@__isFd(fd)
+		if !@_hasFd(fd)
 			Errors.fdNotFound(fd)
 
-		delete @__fileDescriptors[fd]
+		delete @_fileDescriptors[fd]
 
 
 	#*******************************************************************************************************************
@@ -546,13 +546,13 @@ class fs
 			if mode != null then options.mode = mode
 			@writeFileSync(path, '', options)
 
-		@__fileDescriptors[@__fileDescriptorsCounter] =
+		@_fileDescriptors[@_fileDescriptorsCounter] =
 			path: path
 			flags: flags
 
-		@__fileDescriptorsCounter++
+		@_fileDescriptorsCounter++
 
-		return @__fileDescriptorsCounter - 1
+		return @_fileDescriptorsCounter - 1
 
 
 	#*******************************************************************************************************************
@@ -612,21 +612,21 @@ class fs
 
 	# todo: position
 	writeSync: (fd, buffer, offset, length, position) ->
-		if !@__isFd(fd)
+		if !@_hasFd(fd)
 			Errors.fdNotFound(fd)
 
-		path = @__fileDescriptors[fd].path
+		path = @_fileDescriptors[fd].path
 
-		if !isWritable(@__fileDescriptors[fd].flags)
+		if !isWritable(@_fileDescriptors[fd].flags)
 			Errors.notWritable(path)
 
-		item = @__data[path]
+		item = @_data[path]
 		data = buffer.toString('utf8', offset).substr(0, length)
 
 		item.data = new Buffer(data)
 		item.stats.size = data.length
 		item.stats.blksize = data.length
-		item.stats.__modified()
+		item.stats._modified()
 
 
 	#*******************************************************************************************************************
@@ -643,22 +643,22 @@ class fs
 
 
 	readSync: (fd, buffer, offset, length, position = 0) ->
-		if !@__isFd(fd)
+		if !@_hasFd(fd)
 			Errors.fdNotFound(fd)
 
-		path = @__fileDescriptors[fd].path
+		path = @_fileDescriptors[fd].path
 
-		if !isReadable(@__fileDescriptors[fd].flags)
+		if !isReadable(@_fileDescriptors[fd].flags)
 			Errors.notReadable(path)
 
-		item = @__data[path]
+		item = @_data[path]
 
 		data = item.data.toString('utf8')
 		data = data.substr(position, length)
 
 		buffer.write(data, offset)
 
-		item.stats.__accessed()
+		item.stats._accessed()
 
 		return length
 
@@ -720,14 +720,14 @@ class fs
 		if typeof options.flag == 'undefined' then options.flag = 'w'
 
 		if !@existsSync(filename)
-			@__addPath(filename, data: data, mode: options.mode)
+			@_addPath(filename, data: data, mode: options.mode)
 
 		fd = @openSync(filename, options.flag, options.mode)
 		@writeSync(fd, new Buffer(data, options.encoding), 0, data.length, 0)
 		@closeSync(fd)
 
-		@__data[filename].stats.__modified()
-		@__expandPath(filename)
+		@_data[filename].stats._modified()
+		@_expandPath(filename)
 
 
 	#*******************************************************************************************************************
@@ -752,7 +752,7 @@ class fs
 		if typeof options.flag == 'undefined' then options.flag = 'w'
 
 		if !@existsSync(filename)
-			@__addPath(filename, data: '', mode: options.mode)
+			@_addPath(filename, data: '', mode: options.mode)
 
 		if !@statSync(filename).isFile()
 			Errors.notFile(filename)
@@ -760,7 +760,7 @@ class fs
 		if data instanceof Buffer
 			data = data.toString('utf8')
 
-		data = @__data[filename].data.toString('utf8') + data
+		data = @_data[filename].data.toString('utf8') + data
 		@writeFileSync(filename, data)
 
 
@@ -809,7 +809,7 @@ class fs
 
 
 	existsSync: (path) ->
-		return typeof @__data[path] != 'undefined'
+		return typeof @_data[path] != 'undefined'
 
 
 	#*******************************************************************************************************************
