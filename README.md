@@ -18,7 +18,7 @@ Calling unsupported methods will throw an exception.
 * `fs.ftruncate`: yes
 * `fs.truncate`: yes
 * `fs.chown`: yes
-* `fs.fchown`: no
+* `fs.fchown`: yes
 * `fs.lchown`: no
 * `fs.chmod`: yes
 * `fs.fchmod`: no
