@@ -7,6 +7,14 @@ isReadable   = (flags) -> return flags in ['r', 'r+', 'rs', 'rs+', 'w+', 'wx+', 
 isWritable   = (flags) -> return flags in ['r+', 'rs+', 'w', 'wx', 'w+', 'wx+']
 isAppendable = (flags) -> return flags in ['a', 'ax', 'a+', 'ax+']
 
+toDate = (time) ->
+	if typeof time == 'number'
+		return new Date(time * 1000)
+	if time instanceof Date
+		return Date
+
+	throw new Error "Cannot parse time: #{time}"
+
 class fs
 
 
@@ -587,12 +595,23 @@ class fs
 
 
 	futimes: (fd, atime, mtime, callback) ->
-		@futimesSync(fd, atime, mtime)
-		callback()
+		try
+			@futimesSync(fd, atime, mtime)
+			callback(null)
+		catch err
+			callback(err)
 
 
 	futimesSync: (fd, atime, mtime) ->
-		Errors.notImplemented 'futime'
+		if !@_hasFd(fd)
+			Errors.fdNotFound(fd)
+
+		item = @_data[@_fileDescriptors[fd].path]
+
+		item.stats.atime = toDate(aTime)
+		item.stats.mtime = toDate(mtime)
+
+		item.stats._modifiedAttributes()
 
 
 	#*******************************************************************************************************************

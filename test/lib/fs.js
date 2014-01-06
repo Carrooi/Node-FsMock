@@ -494,6 +494,36 @@
         });
       });
     });
+    describe('#futimes()', function() {
+      it('should return an error if file descriptor does not exists', function(done) {
+        return fs.futimes(1, new Date, new Date, function(err) {
+          expect(err).to.be.an["instanceof"](Error);
+          expect(err.message).to.be.equal("File descriptor 1 not exists.");
+          return done();
+        });
+      });
+      return it.skip('should change atime and mtime', function(done) {
+        var atime, mtime;
+        fs._setTree({
+          '/var/www >>': {}
+        });
+        atime = fs.statSync('/var/www').atime;
+        mtime = fs.statSync('/var/www').mtime;
+        console.log(atime.getTime());
+        return fs.open('/var/www', 'r', function(err, fd) {
+          return setTimeout(function() {
+            console.log((new Date).getTime());
+            console.log(fs.statSync('/var/www').atime.getTime());
+            return fs.futimes(fd, new Date, new Date, function() {
+              console.log(fs.statSync('/var/www').atime.getTime());
+              expect(fs.statSync('/var/www').atime.getTime()).not.to.be.equal(atime.getTime());
+              expect(fs.statSync('/var/www').mtime.getTime()).not.to.be.equal(mtime.getTime());
+              return done();
+            });
+          }, 100);
+        });
+      });
+    });
     describe('#write()', function() {
       it('should return an error if file descriptor does not exists', function(done) {
         return fs.write(1, new Buffer(''), 0, 0, 0, function(err) {

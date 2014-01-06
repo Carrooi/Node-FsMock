@@ -428,6 +428,34 @@ describe 'fs', ->
 				done()
 			)
 
+	describe '#futimes()', ->
+
+		it 'should return an error if file descriptor does not exists', (done) ->
+			fs.futimes(1, new Date, new Date, (err) ->
+				expect(err).to.be.an.instanceof(Error)
+				expect(err.message).to.be.equal("File descriptor 1 not exists.")
+				done()
+			)
+
+		it.skip 'should change atime and mtime', (done) ->
+			fs._setTree('/var/www >>': {})
+			atime = fs.statSync('/var/www').atime
+			mtime = fs.statSync('/var/www').mtime
+			console.log atime.getTime()
+
+			fs.open('/var/www', 'r', (err, fd) ->
+				setTimeout( ->
+					console.log (new Date).getTime()
+					console.log fs.statSync('/var/www').atime.getTime()
+					fs.futimes(fd, new Date, new Date, ->
+						console.log fs.statSync('/var/www').atime.getTime()
+						expect(fs.statSync('/var/www').atime.getTime()).not.to.be.equal(atime.getTime())
+						expect(fs.statSync('/var/www').mtime.getTime()).not.to.be.equal(mtime.getTime())
+						done()
+					)
+				, 100)
+			)
+
 	describe '#write()', ->
 
 		it 'should return an error if file descriptor does not exists', (done) ->
