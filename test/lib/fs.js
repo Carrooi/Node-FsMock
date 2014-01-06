@@ -168,6 +168,27 @@
         });
       });
     });
+    describe('#fchown()', function() {
+      it('should return an error if descriptor does not exists', function(done) {
+        return fs.fchown(1, 200, 200, function(err) {
+          expect(err).to.be.an["instanceof"](Error);
+          expect(err.message).to.be.equal("File descriptor 1 not exists.");
+          return done();
+        });
+      });
+      return it('should change uid and  gid', function(done) {
+        fs._setTree({
+          '/var/www >>': {}
+        });
+        return fs.open('/var/www', 'r', function(err, fd) {
+          return fs.fchown(fd, 300, 400, function() {
+            expect(fs._data['/var/www'].uid).to.be.equal(300);
+            expect(fs._data['/var/www'].gid).to.be.equal(400);
+            return done();
+          });
+        });
+      });
+    });
     describe('#chmod()', function() {
       it('should return an error if path does not exists', function(done) {
         return fs.chmod('/var/www', 777, function(err) {
@@ -350,16 +371,6 @@
       });
     });
     describe('#open()', function() {
-      it('should return an error if directory with same name already exists', function(done) {
-        fs._setTree({
-          '/var/www >>': {}
-        });
-        return fs.open('/var/www', 'r', function(err) {
-          expect(err).to.be.an["instanceof"](Error);
-          expect(err.message).to.be.equal("Directory '/var/www' already exists.");
-          return done();
-        });
-      });
       it('should return an error if file does not exists (flag: r)', function(done) {
         return fs.open('/var/www/index.php', 'r', function(err) {
           expect(err).to.be.an["instanceof"](Error);
@@ -545,7 +556,7 @@
         });
         return fs.readFile('/var/www', function(err) {
           expect(err).to.be.an["instanceof"](Error);
-          expect(err.message).to.be.equal("Directory '/var/www' already exists.");
+          expect(err.message).to.be.equal("Path '/var/www' is not a file.");
           return done();
         });
       });
@@ -580,16 +591,6 @@
       });
     });
     describe('#writeFile()', function() {
-      it('should return an error if directory with same name already exists', function(done) {
-        fs._setTree({
-          '/var/www >>': {}
-        });
-        return fs.writeFile('/var/www', '', function(err) {
-          expect(err).to.be.an["instanceof"](Error);
-          expect(err.message).to.be.equal("Directory '/var/www' already exists.");
-          return done();
-        });
-      });
       it('should create new file', function(done) {
         return fs.writeFile('/var/www/index.php', '', function() {
           expect(fs._data).to.have.keys(['/var/www/index.php', '/var/www', '/var']);

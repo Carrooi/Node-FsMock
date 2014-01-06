@@ -199,10 +199,9 @@ class fs
 
 
 	chownSync: (path, uid, gid) ->
-		if !@existsSync(path)
-			Errors.notFound(path)
-
-		@_setAttributes(path, uid: uid, gid: gid)
+		fd = @openSync(path, 'r')
+		@fchownSync(fd, uid, gid)
+		@closeSync(fd)
 
 
 	#*******************************************************************************************************************
@@ -211,12 +210,18 @@ class fs
 
 
 	fchown: (fd, uid, gid, callback) ->
-		@fchownSync(fd, uid, gid)
-		callback()
+		try
+			@fchownSync(fd, uid, gid)
+			callback()
+		catch err
+			callback(err)
 
 
 	fchownSync: (fd, uid, gid) ->
-		Errors.notImplemented 'fchown'
+		if !@_hasFd(fd)
+			Errors.fdNotFound(fd)
+
+		@_setAttributes(@_fileDescriptors[fd].path, uid: uid, gid: gid)
 
 
 	#*******************************************************************************************************************
@@ -532,9 +537,6 @@ class fs
 
 
 	openSync: (path, flags, mode = null) ->
-		if @existsSync(path) && @statSync(path).isDirectory()
-			Errors.directoryExists(path)
-
 		if flags in ['r', 'r+'] && !@existsSync(path)
 			Errors.notFound(path)
 
@@ -620,6 +622,9 @@ class fs
 		if !isWritable(@_fileDescriptors[fd].flags)
 			Errors.notWritable(path)
 
+		if !@statSync(path).isFile()
+			Errors.notFile(path)
+
 		item = @_data[path]
 		data = buffer.toString('utf8', offset).substr(0, length)
 
@@ -650,6 +655,9 @@ class fs
 
 		if !isReadable(@_fileDescriptors[fd].flags)
 			Errors.notReadable(path)
+
+		if !@statSync(path).isFile()
+			Errors.notFile(path)
 
 		item = @_data[path]
 

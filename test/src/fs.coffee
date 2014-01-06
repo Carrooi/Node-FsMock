@@ -135,6 +135,25 @@ describe 'fs', ->
 				done()
 			)
 
+	describe '#fchown()', ->
+
+		it 'should return an error if descriptor does not exists', (done) ->
+			fs.fchown(1, 200, 200, (err) ->
+				expect(err).to.be.an.instanceof(Error)
+				expect(err.message).to.be.equal("File descriptor 1 not exists.")
+				done()
+			)
+
+		it 'should change uid and  gid', (done) ->
+			fs._setTree('/var/www >>': {})
+			fs.open('/var/www', 'r', (err, fd) ->
+				fs.fchown(fd, 300, 400, ->
+					expect(fs._data['/var/www'].uid).to.be.equal(300)
+					expect(fs._data['/var/www'].gid).to.be.equal(400)
+					done()
+				)
+			)
+
 	describe '#chmod()', ->
 
 		it 'should return an error if path does not exists', (done) ->
@@ -298,14 +317,6 @@ describe 'fs', ->
 
 	describe '#open()', ->
 
-		it 'should return an error if directory with same name already exists', (done) ->
-			fs._setTree('/var/www >>': {})
-			fs.open('/var/www', 'r', (err) ->
-				expect(err).to.be.an.instanceof(Error)
-				expect(err.message).to.be.equal("Directory '/var/www' already exists.")
-				done()
-			)
-
 		it 'should return an error if file does not exists (flag: r)', (done) ->
 			fs.open('/var/www/index.php', 'r', (err) ->
 				expect(err).to.be.an.instanceof(Error)
@@ -464,7 +475,7 @@ describe 'fs', ->
 			fs._setTree('/var/www >>': {})
 			fs.readFile('/var/www', (err) ->
 				expect(err).to.be.an.instanceof(Error)
-				expect(err.message).to.be.equal("Directory '/var/www' already exists.")
+				expect(err.message).to.be.equal("Path '/var/www' is not a file.")
 				done()
 			)
 
@@ -486,14 +497,6 @@ describe 'fs', ->
 			)
 
 	describe '#writeFile()', ->
-
-		it 'should return an error if directory with same name already exists', (done) ->
-			fs._setTree('/var/www >>': {})
-			fs.writeFile('/var/www', '', (err) ->
-				expect(err).to.be.an.instanceof(Error)
-				expect(err.message).to.be.equal("Directory '/var/www' already exists.")
-				done()
-			)
 
 		it 'should create new file', (done) ->
 			fs.writeFile('/var/www/index.php', '', ->
