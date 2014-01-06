@@ -2,7 +2,10 @@ Stats = require './Stats'
 Errors = require './Errors'
 escape = require 'escape-regexp'
 
-isFunction = (obj) -> return Object.prototype.toString.call(obj) == '[object Function]'
+isFunction   = (obj)   -> return Object.prototype.toString.call(obj) == '[object Function]'
+isReadable   = (flags) -> return flags in ['r', 'r+', 'rs', 'rs+', 'w+', 'wx+', 'a+', 'ax+']
+isWritable   = (flags) -> return flags in ['r+', 'rs+', 'w', 'wx', 'w+', 'wx+']
+isAppendable = (flags) -> return flags in ['a', 'ax', 'a+', 'ax+']
 
 class fs
 
@@ -31,18 +34,6 @@ class fs
 				return true
 
 		return false
-
-
-	__isReadable: (flags) ->
-		return flags in ['r', 'r+', 'rs', 'rs+', 'w+', 'wx+', 'a+', 'ax+']
-
-
-	__isWritable: (flags) ->
-		return flags in ['r+', 'rs+', 'w', 'wx', 'w+', 'wx+']
-
-
-	__isAppendable: (flags) ->
-		return flags in ['a', 'ax', 'a+', 'ax+']
 
 
 	__setAttributes: (path, attributes = {}) ->
@@ -626,7 +617,7 @@ class fs
 
 		path = @__fileDescriptors[fd].path
 
-		if !@__isWritable(@__fileDescriptors[fd].flags)
+		if !isWritable(@__fileDescriptors[fd].flags)
 			Errors.notWritable(path)
 
 		item = @__data[path]
@@ -657,7 +648,7 @@ class fs
 
 		path = @__fileDescriptors[fd].path
 
-		if !@__isReadable(@__fileDescriptors[fd].flags)
+		if !isReadable(@__fileDescriptors[fd].flags)
 			Errors.notReadable(path)
 
 		item = @__data[path]
