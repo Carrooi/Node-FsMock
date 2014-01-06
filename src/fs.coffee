@@ -304,10 +304,10 @@ class fs
 
 
 	statSync: (path) ->
-		if !@existsSync(path)
-			Errors.notFound(path)
-
-		return @_data[path].stats
+		fd = @openSync(path, 'r')
+		result = @fstatSync(fd)
+		@closeSync(fd)
+		return result
 
 
 	#*******************************************************************************************************************
@@ -330,12 +330,17 @@ class fs
 
 
 	fstat: (fd, callback) ->
-		@fstatSync(fd)
-		callback()
+		try
+			callback(null, @fstatSync(fd))
+		catch err
+			callback(err, null)
 
 
-	fstatSync: (path) ->
-		Errors.notImplemented 'fstat'
+	fstatSync: (fd) ->
+		if !@_hasFd(fd)
+			Errors.fdNotFound(fd)
+
+		return @_data[@_fileDescriptors[fd].path].stats
 
 
 	#*******************************************************************************************************************

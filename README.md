@@ -25,7 +25,7 @@ Calling unsupported methods will throw an exception.
 * `fs.lchmod`: no
 * `fs.stat`: yes
 * `fs.lstat`: no
-* `fs.fstat`: no
+* `fs.fstat`: yes
 * `fs.link`: no
 * `fs.symlink`: no
 * `fs.readlink`: no

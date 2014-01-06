@@ -1,4 +1,5 @@
 FS = require '../../lib/fs'
+Stats = require '../../lib/Stats'
 expect = require('chai').expect
 
 fs = null
@@ -201,9 +202,30 @@ describe 'fs', ->
 		it 'should return stats object for path', (done) ->
 			fs._setTree('/var/www/index.php': {})
 			fs.stat('/var/www/index.php', (err, stats) ->
+				expect(stats).to.be.an.instanceof(Stats)
 				expect(stats.isFile()).to.be.true
 				done()
 			)
+
+	describe '#fstat()', ->
+
+		it 'should return an error if descriptor does not exists', (done) ->
+			fs.fstat(1, (err) ->
+				expect(err).to.be.an.instanceof(Error)
+				expect(err.message).to.be.equal("File descriptor 1 not exists.")
+				done()
+			)
+
+		it 'should return stat object', (done) ->
+			fs._setTree('/var/www/index.php': {})
+			fs.open('/var/www/index.php', 'r', (err, fd) ->
+				fs.fstat(fd, (err, stats) ->
+					expect(stats).to.be.an.instanceof(Stats)
+					expect(stats._path).to.be.equal('/var/www/index.php')
+					done()
+				)
+			)
+
 
 	describe '#unlink()', ->
 
