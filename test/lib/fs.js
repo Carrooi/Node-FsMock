@@ -207,6 +207,26 @@
         });
       });
     });
+    describe('#fchmod()', function() {
+      it('should return an error if descriptor does not exists', function(done) {
+        return fs.fchmod(1, 777, function(err) {
+          expect(err).to.be.an["instanceof"](Error);
+          expect(err.message).to.be.equal("File descriptor 1 not exists.");
+          return done();
+        });
+      });
+      return it('should change mode', function(done) {
+        fs._setTree({
+          '/var/www/index.php': {}
+        });
+        return fs.open('/var/www/index.php', 'r', function(err, fd) {
+          return fs.fchmod(1, 777, function() {
+            expect(fs._data['/var/www/index.php'].mode).to.be.equal(777);
+            return done();
+          });
+        });
+      });
+    });
     describe('#stat()', function() {
       it('should return an error if path does not exists', function(done) {
         return fs.stat('/var/www', function(err) {

@@ -170,6 +170,25 @@ describe 'fs', ->
 				done()
 			)
 
+	describe '#fchmod()', ->
+
+		it 'should return an error if descriptor does not exists', (done) ->
+			fs.fchmod(1, 777, (err) ->
+				expect(err).to.be.an.instanceof(Error)
+				expect(err.message).to.be.equal("File descriptor 1 not exists.")
+				done()
+			)
+
+		it 'should change mode', (done) ->
+			fs._setTree('/var/www/index.php': {})
+			fs.open('/var/www/index.php', 'r', (err, fd) ->
+				fs.fchmod(1, 777, ->
+					expect(fs._data['/var/www/index.php'].mode).to.be.equal(777)
+					done()
+				)
+			)
+
+
 	describe '#stat()', ->
 
 		it 'should return an error if path does not exists', (done) ->

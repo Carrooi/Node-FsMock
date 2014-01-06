@@ -21,7 +21,7 @@ Calling unsupported methods will throw an exception.
 * `fs.fchown`: yes
 * `fs.lchown`: no
 * `fs.chmod`: yes
-* `fs.fchmod`: no
+* `fs.fchmod`: yes
 * `fs.lchmod`: no
 * `fs.stat`: yes
 * `fs.lstat`: no

@@ -252,10 +252,9 @@ class fs
 
 
 	chmodSync: (path, mode) ->
-		if !@existsSync(path)
-			Errors.notFound(path)
-
-		@_setAttributes(path, mode: mode)
+		fd = @openSync(path, 'r', mode)
+		@fchmodSync(fd, mode)
+		@closeSync(fd)
 
 
 	#*******************************************************************************************************************
@@ -264,12 +263,18 @@ class fs
 
 
 	fchmod: (fd, mode, callback) ->
-		@fchmodSync(fd, mode)
-		callback()
+		try
+			@fchmodSync(fd, mode)
+			callback(null)
+		catch err
+			callback(err)
 
 
 	fchmodSync: (fd, mode) ->
-		Errors.notImplemented 'fchmod'
+		if !@_hasFd(fd)
+			Errors.fdNotFound(fd)
+
+		@_setAttributes(@_fileDescriptors[fd].path, mode: mode)
 
 
 	#*******************************************************************************************************************
