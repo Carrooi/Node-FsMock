@@ -914,7 +914,6 @@ class fs
 	#*******************************************************************************************************************
 
 
-	# todo: options.start
 	createWriteStream: (path, options = {}) ->
 		if typeof options.flags == 'undefined' then options.flags = 'w'
 		if typeof options.encoding == 'undefined' then options.encoding = null
