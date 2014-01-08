@@ -563,6 +563,15 @@
         });
       });
     });
+    describe('#fsync()', function() {
+      return it('should return an error if file descriptor does not exists', function(done) {
+        return fs.fsync(1, function(err) {
+          expect(err).to.be.an["instanceof"](Error);
+          expect(err.message).to.be.equal("File descriptor 1 not exists.");
+          return done();
+        });
+      });
+    });
     describe('#write()', function() {
       it('should return an error if file descriptor does not exists', function(done) {
         return fs.write(1, new Buffer(''), 0, 0, 0, function(err) {

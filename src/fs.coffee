@@ -637,12 +637,16 @@ class fs
 
 
 	fsync: (fd, callback) ->
-		@fsyncSync(fd)
-		callback()
+		try
+			@fsyncSync(fd)
+			callback(null)
+		catch err
+			callback(err)
 
 
 	fsyncSync: (fd) ->
-		Errors.notImplemented 'fsync'
+		if !@_hasFd(fd)
+			Errors.fdNotFound(fd)
 
 
 	#*******************************************************************************************************************
