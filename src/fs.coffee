@@ -802,7 +802,6 @@ class fs
 			callback(err, null)
 
 
-	# todo: write at position
 	appendFileSync: (filename, data, options = {}) ->
 		if typeof options.encoding == 'undefined' then options.encoding = 'utf8'
 		if typeof options.mode == 'undefined' then options.mode = 438
@@ -811,14 +810,13 @@ class fs
 		if !@existsSync(filename)
 			@_addPath(filename, data: '', mode: options.mode)
 
-		if !@statSync(filename).isFile()
-			Errors.notFile(filename)
+		if typeof data == 'string'
+			data = new Buffer(data, options.encoding)
 
-		if data instanceof Buffer
-			data = data.toString('utf8')
-
-		data = @_data[filename].data.toString('utf8') + data
-		@writeFileSync(filename, data)
+		fd = @openSync(filename, options.flag, options.mode)
+		size = @fstatSync(fd).size
+		@writeSync(fd, data, 0, data.length, size)
+		@closeSync(fd)
 
 
 	#*******************************************************************************************************************
