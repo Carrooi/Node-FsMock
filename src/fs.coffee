@@ -919,21 +919,23 @@ class fs
 		if typeof options.flags == 'undefined' then options.flags = 'w'
 		if typeof options.encoding == 'undefined' then options.encoding = null
 		if typeof options.mode == 'undefined' then options.mode = 666
-		if typeof options.start == 'undefined' then options.start = null
+		if typeof options.start == 'undefined' then options.start = 0
 
-		data = ''
+		fd = @openSync(path, options.flags, options.mode)
+
+		position = options.start
 
 		ws = Writable()
-		ws._write = (chunk, enc, next) ->
-			if chunk instanceof Buffer
-				chunk = chunk.toString(options.encofing)
+		ws._write = (chunk, enc, next) =>
+			if typeof chunk == 'string'
+				chunk = new Buffer(chunk)
 
-			data += chunk
-			next()
+			@write(fd, chunk, 0, chunk.length, position, ->
+				position += chunk.length
+				next()
+			)
 
 		ws.on 'finish', =>
-			fd = @openSync(path, options.flags, options.mode)
-			@writeSync(fd, new Buffer(data, options.encoding), 0, data.length, 0)
 			@closeSync(fd)
 
 		return ws
