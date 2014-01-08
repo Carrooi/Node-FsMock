@@ -674,3 +674,20 @@ describe 'fs', ->
 					expect(buf.toString('utf8')).to.be.equal('word')
 				else
 					done()
+
+	describe '#createWriteStream()', ->
+
+		it 'should return an error if file does not exists', ->
+			expect( -> fs.createReadStream('/var/www/index.php') ).to.throw(Error, "File or directory '/var/www/index.php' does not exists.")
+
+		it 'should create writable stream', (done) ->
+			fs._setTree('/var/www/index.php': {data: ''})
+			ws = fs.createWriteStream('/var/www/index.php')
+			ws.on 'finish', ->
+				expect(fs.readFileSync('/var/www/index.php', encoding: 'utf8')).to.be.equal('hello word')
+				done()
+
+			ws.write('hello')
+			ws.write(' ')
+			ws.write('word')
+			ws.end()

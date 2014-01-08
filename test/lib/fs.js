@@ -769,7 +769,7 @@
         });
       });
     });
-    return describe('#createReadStream()', function() {
+    describe('#createReadStream()', function() {
       it('should return an error if file does not exists', function() {
         return expect(function() {
           return fs.createReadStream('/var/www/index.php');
@@ -811,6 +811,32 @@
             return done();
           }
         });
+      });
+    });
+    return describe('#createWriteStream()', function() {
+      it('should return an error if file does not exists', function() {
+        return expect(function() {
+          return fs.createReadStream('/var/www/index.php');
+        }).to["throw"](Error, "File or directory '/var/www/index.php' does not exists.");
+      });
+      return it('should create writable stream', function(done) {
+        var ws;
+        fs._setTree({
+          '/var/www/index.php': {
+            data: ''
+          }
+        });
+        ws = fs.createWriteStream('/var/www/index.php');
+        ws.on('finish', function() {
+          expect(fs.readFileSync('/var/www/index.php', {
+            encoding: 'utf8'
+          })).to.be.equal('hello word');
+          return done();
+        });
+        ws.write('hello');
+        ws.write(' ');
+        ws.write('word');
+        return ws.end();
       });
     });
   });

@@ -3,6 +3,7 @@ Errors = require './Errors'
 escape = require 'escape-regexp'
 _path = require 'path'
 Readable = require('stream').Readable
+Writable = require('stream').Writable
 
 isFunction   = (obj)   -> return Object.prototype.toString.call(obj) == '[object Function]'
 isReadable   = (flags) -> return flags in ['r', 'r+', 'rs', 'rs+', 'w+', 'wx+', 'a+', 'ax+']
@@ -910,8 +911,29 @@ class fs
 	#*******************************************************************************************************************
 
 
-	createWriteStream: (path, options = null) ->
-		Errors.notImplemented 'createWriteStream'
+	# todo: options.start
+	createWriteStream: (path, options = {}) ->
+		if typeof options.flags == 'undefined' then options.flags = 'w'
+		if typeof options.encoding == 'undefined' then options.encoding = null
+		if typeof options.mode == 'undefined' then options.mode = 666
+		if typeof options.start == 'undefined' then options.start = null
+
+		data = ''
+
+		ws = Writable()
+		ws._write = (chunk, enc, next) ->
+			if chunk instanceof Buffer
+				chunk = chunk.toString(options.encofing)
+
+			data += chunk
+			next()
+
+		ws.on 'finish', =>
+			fd = @openSync(path, options.flags, options.mode)
+			@writeSync(fd, new Buffer(data, options.encoding), 0, data.length, 0)
+			@closeSync(fd)
+
+		return ws
 
 
 module.exports = fs
