@@ -776,9 +776,6 @@ class fs
 		if typeof options.mode == 'undefined' then options.mode = 438
 		if typeof options.flag == 'undefined' then options.flag = 'w'
 
-		if !@existsSync(filename)
-			@_addPath(filename, data: data, mode: options.mode)
-
 		fd = @openSync(filename, options.flag, options.mode)
 		@writeSync(fd, new Buffer(data, options.encoding), 0, data.length, 0)
 		@closeSync(fd)
@@ -806,9 +803,6 @@ class fs
 		if typeof options.encoding == 'undefined' then options.encoding = 'utf8'
 		if typeof options.mode == 'undefined' then options.mode = 438
 		if typeof options.flag == 'undefined' then options.flag = 'w'
-
-		if !@existsSync(filename)
-			@_addPath(filename, data: '', mode: options.mode)
 
 		if typeof data == 'string'
 			data = new Buffer(data, options.encoding)
