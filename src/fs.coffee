@@ -2,6 +2,7 @@ Stats = require './Stats'
 Errors = require './Errors'
 escape = require 'escape-regexp'
 _path = require 'path'
+Readable = require('stream').Readable
 
 isFunction   = (obj)   -> return Object.prototype.toString.call(obj) == '[object Function]'
 isReadable   = (flags) -> return flags in ['r', 'r+', 'rs', 'rs+', 'w+', 'wx+', 'a+', 'ax+']
@@ -872,8 +873,36 @@ class fs
 	#*******************************************************************************************************************
 
 
-	createReadStream: (path, options = null) ->
-		Errors.notImplemented 'createReadStream'
+	createReadStream: (path, options = {}) ->
+		if typeof options.flags == 'undefined' then options.flags = 'r'
+		if typeof options.encoding == 'undefined' then options.encoding = null
+		if typeof options.fd == 'undefined' then options.fd = null
+		if typeof options.mode == 'undefined' then options.mode = 666
+		if typeof options.autoClose == 'undefined' then options.autoClose = true
+		if typeof options.start == 'undefined' then options.start = null
+		if typeof options.end == 'undefined' then options.end = null
+
+		if options.fd == null
+			fd = @openSync(path, options.flags, options.mode)
+
+		size = @fstatSync(fd).size
+
+		rs = new Readable
+		buffer = new Buffer(size)
+
+		@readSync(fd, buffer, 0, size, 0)
+
+		data = buffer.toString(options.encoding)
+		if options.start != null && options.end != null
+			data = data.substring(options.start, options.end)
+
+		rs.push(data)
+		rs.push(null)
+
+		if options.autoClose
+			@closeSync(fd)
+
+		return rs
 
 
 	#*******************************************************************************************************************

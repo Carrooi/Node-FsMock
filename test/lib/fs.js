@@ -752,7 +752,7 @@
         });
       });
     });
-    return describe('#exists()', function() {
+    describe('#exists()', function() {
       it('should return false when file does not exists', function(done) {
         return fs.exists('/var/www/index.php', function(exists) {
           expect(exists).to.be["false"];
@@ -763,18 +763,53 @@
         fs._setTree({
           '/var/www/index.php': {}
         });
-        fs.exists('/var/www/index.php', function(exists) {
+        return fs.exists('/var/www/index.php', function(exists) {
           expect(exists).to.be["true"];
           return done();
         });
-        fs = require('fs');
-        return fs.open(__dirname + '/fs.js', 'r', function(err, fd) {
-          var buffer, size;
-          size = fs.statSync(__dirname + '/fs.js').size;
-          buffer = new Buffer(size);
-          return fs.read(fd, buffer, 0, 10, size - 10, function(err, bytesRead, buffer) {
-            return fs.close(fd);
-          });
+      });
+    });
+    return describe('#createReadStream()', function() {
+      it('should return an error if file does not exists', function() {
+        return expect(function() {
+          return fs.createReadStream('/var/www/index.php');
+        }).to["throw"](Error, "File or directory '/var/www/index.php' does not exists.");
+      });
+      it('should create readable stream', function(done) {
+        var rs;
+        fs._setTree({
+          '/var/www/index.php': {
+            data: 'hello word'
+          }
+        });
+        return rs = fs.createReadStream('/var/www/index.php').on('readable', function() {
+          var buf;
+          buf = rs.read();
+          if (buf !== null) {
+            return expect(buf.toString('utf8')).to.be.equal('hello word');
+          } else {
+            return done();
+          }
+        });
+      });
+      return it('should create readable stream with start and end', function(done) {
+        var rs;
+        fs._setTree({
+          '/var/www/index.php': {
+            data: 'hello word'
+          }
+        });
+        return rs = fs.createReadStream('/var/www/index.php', {
+          start: 6,
+          end: 10
+        }).on('readable', function() {
+          var buf;
+          buf = rs.read();
+          if (buf !== null) {
+            return expect(buf.toString('utf8')).to.be.equal('word');
+          } else {
+            return done();
+          }
         });
       });
     });

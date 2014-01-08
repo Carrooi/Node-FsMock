@@ -652,12 +652,25 @@ describe 'fs', ->
 				done()
 			)
 
-			fs = require 'fs'
-			fs.open(__dirname + '/fs.js', 'r', (err, fd) ->
-				size = fs.statSync(__dirname + '/fs.js').size
-				buffer = new Buffer(size)
-				fs.read(fd, buffer, 0, 10, size - 10, (err, bytesRead, buffer) ->
-					#console.log bytesRead
-					fs.close(fd)
-				)
-			)
+	describe '#createReadStream()', ->
+
+		it 'should return an error if file does not exists', ->
+			expect( -> fs.createReadStream('/var/www/index.php') ).to.throw(Error, "File or directory '/var/www/index.php' does not exists.")
+
+		it 'should create readable stream', (done) ->
+			fs._setTree('/var/www/index.php': {data: 'hello word'})
+			rs = fs.createReadStream('/var/www/index.php').on 'readable', ->
+				buf = rs.read()
+				if buf != null
+					expect(buf.toString('utf8')).to.be.equal('hello word')
+				else
+					done()
+
+		it 'should create readable stream with start and end', (done) ->
+			fs._setTree('/var/www/index.php': {data: 'hello word'})
+			rs = fs.createReadStream('/var/www/index.php', start: 6, end: 10).on 'readable', ->
+				buf = rs.read()
+				if buf != null
+					expect(buf.toString('utf8')).to.be.equal('word')
+				else
+					done()

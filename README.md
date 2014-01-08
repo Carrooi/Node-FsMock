@@ -49,7 +49,7 @@ Calling unsupported methods will throw an exception.
 * `fs.unwatchFile()`: no
 * `fs.watch()`: no
 * `fs.exists()`: yes
-* `fs.createReadStream()`: no
+* `fs.createReadStream()`: yes
 * `fs.createWriteStream()`: no
 
 ### Stats:
