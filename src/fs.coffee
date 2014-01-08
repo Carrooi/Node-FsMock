@@ -661,8 +661,7 @@ class fs
 			callback(err, null, buffer) if callback isnt null
 
 
-	# todo: position
-	writeSync: (fd, buffer, offset, length, position) ->
+	writeSync: (fd, buffer, offset, length, position = 0) ->
 		if !@_hasFd(fd)
 			Errors.fdNotFound(fd)
 
@@ -676,6 +675,10 @@ class fs
 
 		item = @_data[path]
 		data = buffer.toString('utf8', offset).substr(0, length)
+
+		if position != 0
+			oldData = @readFileSync(path, encoding: 'utf8')
+			data = [oldData.slice(0, position), data, oldData.slice(position)].join('')
 
 		item.data = new Buffer(data)
 		item.stats.size = data.length

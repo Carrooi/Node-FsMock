@@ -583,7 +583,7 @@
           });
         });
       });
-      return it('should write data to file', function(done) {
+      it('should write data to file', function(done) {
         fs._setTree({
           '/var/www/index.php': {
             data: 'hello word'
@@ -592,6 +592,21 @@
         return fs.open('/var/www/index.php', 'w', function(err, fd) {
           return fs.write(fd, new Buffer('hello'), 0, 5, 0, function() {
             expect(fs._data['/var/www/index.php'].data.toString('utf8')).to.be.equal('hello');
+            return done();
+          });
+        });
+      });
+      return it('should write data to exact position in file', function(done) {
+        fs._setTree({
+          '/var/www/index.php': {
+            data: 'helloword'
+          }
+        });
+        return fs.open('/var/www/index.php', 'w', function(err, fd) {
+          return fs.write(fd, new Buffer(' '), 0, 1, 5, function() {
+            expect(fs.readFileSync('/var/www/index.php', {
+              encoding: 'utf8'
+            })).to.be.equal('hello word');
             return done();
           });
         });

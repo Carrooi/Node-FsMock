@@ -517,6 +517,15 @@ describe 'fs', ->
 				)
 			)
 
+		it 'should write data to exact position in file', (done) ->
+			fs._setTree('/var/www/index.php': {data: 'helloword'})
+			fs.open('/var/www/index.php', 'w', (err, fd) ->
+				fs.write(fd, new Buffer(' '), 0, 1, 5, ->
+					expect(fs.readFileSync('/var/www/index.php', encoding: 'utf8')).to.be.equal('hello word')
+					done()
+				)
+			)
+
 	describe '#read()', ->
 
 		it 'should return an error if file descriptor does not exists', (done) ->
