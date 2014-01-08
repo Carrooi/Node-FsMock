@@ -38,8 +38,8 @@ Calling unsupported methods will throw an exception.
 * `fs.readdir()`: yes
 * `fs.close()`: yes
 * `fs.open()`: yes
-* `fs.utimes()`: no
-* `fs.futimes()`: no
+* `fs.utimes()`: yes
+* `fs.futimes()`: yes
 * `fs.write()`: yes
 * `fs.read()`: yes
 * `fs.readFile()`: yes

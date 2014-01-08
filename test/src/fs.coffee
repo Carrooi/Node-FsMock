@@ -428,6 +428,22 @@ describe 'fs', ->
 				done()
 			)
 
+	describe '#utimes()', ->
+
+		it 'shoul change atime and mtime', (done) ->
+			fs._setTree('/var/www/index.php': {})
+			atime = fs.statSync('/var/www/index.php').atime
+			mtime = fs.statSync('/var/www/index.php').mtime
+
+			setTimeout( ->
+				fs.utimes('/var/www/index.php', new Date, new Date, ->
+					expect(fs.statSync('/var/www/index.php').atime.getTime()).not.to.be.equal(atime.getTime())
+					expect(fs.statSync('/var/www/index.php').mtime.getTime()).not.to.be.equal(mtime.getTime())
+					done()
+				)
+			, 100)
+
+
 	describe '#futimes()', ->
 
 		it 'should return an error if file descriptor does not exists', (done) ->
@@ -437,18 +453,14 @@ describe 'fs', ->
 				done()
 			)
 
-		it.skip 'should change atime and mtime', (done) ->
+		it 'should change atime and mtime', (done) ->
 			fs._setTree('/var/www >>': {})
 			atime = fs.statSync('/var/www').atime
 			mtime = fs.statSync('/var/www').mtime
-			console.log atime.getTime()
 
 			fs.open('/var/www', 'r', (err, fd) ->
 				setTimeout( ->
-					console.log (new Date).getTime()
-					console.log fs.statSync('/var/www').atime.getTime()
 					fs.futimes(fd, new Date, new Date, ->
-						console.log fs.statSync('/var/www').atime.getTime()
 						expect(fs.statSync('/var/www').atime.getTime()).not.to.be.equal(atime.getTime())
 						expect(fs.statSync('/var/www').mtime.getTime()).not.to.be.equal(mtime.getTime())
 						done()

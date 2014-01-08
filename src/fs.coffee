@@ -11,7 +11,7 @@ toDate = (time) ->
 	if typeof time == 'number'
 		return new Date(time * 1000)
 	if time instanceof Date
-		return Date
+		return time
 
 	throw new Error "Cannot parse time: #{time}"
 
@@ -580,12 +580,17 @@ class fs
 
 
 	utimes: (path, atime, mtime, callback) ->
-		@utimesSync(path, atime, mtime)
-		callback()
+		try
+			@utimesSync(path, atime, mtime)
+			callback(null)
+		catch err
+			callback(err)
 
 
 	utimesSync: (path, atime, mtime) ->
-		Errors.notImplemented 'utime'
+		fd = @openSync(path, 'r')
+		@futimesSync(fd, atime, mtime)
+		@closeSync(fd)
 
 
 	#*******************************************************************************************************************
@@ -607,7 +612,7 @@ class fs
 
 		item = @_data[@_fileDescriptors[fd].path]
 
-		item.stats.atime = toDate(aTime)
+		item.stats.atime = toDate(atime)
 		item.stats.mtime = toDate(mtime)
 
 		item.stats._modifiedAttributes()
