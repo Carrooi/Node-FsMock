@@ -269,6 +269,32 @@
         });
       });
     });
+    describe('#realpath()', function() {
+      it('should return an error if path does not exists', function(done) {
+        return fs.realpath('/var/www', function(err) {
+          expect(err).to.be.an["instanceof"](Error);
+          expect(err.message).to.be.equal("File or directory '/var/www' does not exists.");
+          return done();
+        });
+      });
+      it('should load realpath from cache object', function(done) {
+        return fs.realpath('/var/www', {
+          '/var/www': '/var/data/www'
+        }, function(err, resolvedPath) {
+          expect(resolvedPath).to.be.equal('/var/data/www');
+          return done();
+        });
+      });
+      return it('should return resolved realpath', function(done) {
+        fs._setTree({
+          '/var/www/index.php': {}
+        });
+        return fs.realpath('/var/www/data/../../www/index.php', function(err, resolvedPath) {
+          expect(resolvedPath).to.be.equal('/var/www/index.php');
+          return done();
+        });
+      });
+    });
     describe('#unlink()', function() {
       it('should return an error if path does not exists', function(done) {
         return fs.unlink('/var/www/index.php', function(err) {

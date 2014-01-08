@@ -226,6 +226,27 @@ describe 'fs', ->
 				)
 			)
 
+	describe '#realpath()', ->
+
+		it 'should return an error if path does not exists', (done) ->
+			fs.realpath('/var/www', (err) ->
+				expect(err).to.be.an.instanceof(Error)
+				expect(err.message).to.be.equal("File or directory '/var/www' does not exists.")
+				done()
+			)
+
+		it 'should load realpath from cache object', (done) ->
+			fs.realpath('/var/www', '/var/www': '/var/data/www', (err, resolvedPath) ->
+				expect(resolvedPath).to.be.equal('/var/data/www')
+				done()
+			)
+
+		it 'should return resolved realpath', (done) ->
+			fs._setTree('/var/www/index.php': {})
+			fs.realpath('/var/www/data/../../www/index.php', (err, resolvedPath) ->
+				expect(resolvedPath).to.be.equal('/var/www/index.php')
+				done()
+			)
 
 	describe '#unlink()', ->
 

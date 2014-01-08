@@ -1,6 +1,7 @@
 Stats = require './Stats'
 Errors = require './Errors'
 escape = require 'escape-regexp'
+_path = require 'path'
 
 isFunction   = (obj)   -> return Object.prototype.toString.call(obj) == '[object Function]'
 isReadable   = (flags) -> return flags in ['r', 'r+', 'rs', 'rs+', 'w+', 'wx+', 'a+', 'ax+']
@@ -406,12 +407,25 @@ class fs
 			callback = cache
 			cache = null
 
-		@realpathSync(path, cache)
-		callback()
+		try
+			callback(null, @realpathSync(path, cache))
+		catch err
+			callback(err, null)
 
 
 	realpathSync: (path, cache = null) ->
-		Errors.notImplemented 'realpath'
+		if cache != null && typeof cache[path] != 'undefined'
+			return cache[path]
+
+		if path[0] == '.'
+			path = _path.join('/', path)
+
+		path = _path.normalize(path)
+
+		if !@existsSync(path)
+			Errors.notFound(path)
+
+		return path
 
 
 	#*******************************************************************************************************************
