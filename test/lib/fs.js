@@ -496,26 +496,26 @@
         });
       });
       it('should create new file if it does not exists (flag: w)', function(done) {
-        return fs.open('/var/www/index.php', 'w', function() {
-          expect(fs.statSync('/var/www/index.php').isFile());
+        return fs.open('/var/www/index.php', 'w', function(err, fd) {
+          expect(fs.fstatSync(fd).isFile()).to.be["true"];
           return done();
         });
       });
       it('should create new file if it does not exists (flag: w+)', function(done) {
-        return fs.open('/var/www/index.php', 'w+', function() {
-          expect(fs.statSync('/var/www/index.php').isFile());
+        return fs.open('/var/www/index.php', 'w+', function(err, fd) {
+          expect(fs.fstatSync(fd).isFile()).to.be["true"];
           return done();
         });
       });
       it('should create new file if it does not exists (flag: a)', function(done) {
-        return fs.open('/var/www/index.php', 'a', function() {
-          expect(fs.statSync('/var/www/index.php').isFile());
+        return fs.open('/var/www/index.php', 'a', function(err, fd) {
+          expect(fs.fstatSync(fd).isFile()).to.be["true"];
           return done();
         });
       });
       return it('should create new file if it does not exists (flag: a+)', function(done) {
-        return fs.open('/var/www/index.php', 'a+', function() {
-          expect(fs.statSync('/var/www/index.php').isFile());
+        return fs.open('/var/www/index.php', 'a+', function(err, fd) {
+          expect(fs.fstatSync(fd).isFile()).to.be["true"];
           return done();
         });
       });
@@ -546,17 +546,17 @@
         });
       });
       return it('should change atime and mtime', function(done) {
-        var atime, mtime;
         fs._setTree({
           '/var/www >>': {}
         });
-        atime = fs.statSync('/var/www').atime;
-        mtime = fs.statSync('/var/www').mtime;
         return fs.open('/var/www', 'r', function(err, fd) {
+          var atime, mtime;
+          atime = fs.fstatSync(fd).atime;
+          mtime = fs.fstatSync(fd).mtime;
           return setTimeout(function() {
             return fs.futimes(fd, new Date, new Date, function() {
-              expect(fs.statSync('/var/www').atime.getTime()).not.to.be.equal(atime.getTime());
-              expect(fs.statSync('/var/www').mtime.getTime()).not.to.be.equal(mtime.getTime());
+              expect(fs.fstatSync(fd).atime.getTime()).not.to.be.equal(atime.getTime());
+              expect(fs.fstatSync(fd).mtime.getTime()).not.to.be.equal(mtime.getTime());
               return done();
             });
           }, 100);
@@ -599,8 +599,10 @@
           }
         });
         return fs.open('/var/www/index.php', 'w', function(err, fd) {
-          return fs.write(fd, new Buffer('hello'), 0, 5, 0, function() {
-            expect(fs._data['/var/www/index.php'].data.toString('utf8')).to.be.equal('hello');
+          return fs.write(fd, new Buffer('hello'), 0, 5, null, function() {
+            expect(fs.readFileSync('/var/www/index.php', {
+              encoding: 'utf8'
+            })).to.be.equal('hello');
             return done();
           });
         });
@@ -649,7 +651,7 @@
         });
         return fs.open('/var/www/index.php', 'r', function(err, fd) {
           var buffer, size;
-          size = fs.statSync('/var/www/index.php').size;
+          size = fs.fstatSync(fd).size;
           buffer = new Buffer(size);
           return fs.read(fd, buffer, 0, size, null, function(err, bytesRead, buffer) {
             expect(bytesRead).to.be.equal(size);
@@ -667,7 +669,7 @@
         });
         return fs.open('/var/www/index.php', 'r', function(err, fd) {
           var buffer, bytesRead, size;
-          size = fs.statSync('/var/www/index.php').size;
+          size = fs.fstatSync(fd).size;
           buffer = new Buffer(size);
           bytesRead = 0;
           while (bytesRead < size) {
@@ -731,7 +733,7 @@
       it('should create new file', function(done) {
         return fs.writeFile('/var/www/index.php', '', function() {
           expect(fs._data).to.have.keys(['/var/www/index.php', '/var/www', '/var']);
-          expect(fs._data['/var/www/index.php'].stats.isFile()).to.be["true"];
+          expect(fs.statSync('/var/www/index.php').isFile()).to.be["true"];
           return done();
         });
       });
@@ -742,7 +744,9 @@
           }
         });
         return fs.writeFile('/var/www/index.php', 'new', function() {
-          expect(fs._data['/var/www/index.php'].data.toString('utf8')).to.be.equal('new');
+          expect(fs.readFileSync('/var/www/index.php', {
+            encoding: 'utf8'
+          })).to.be.equal('new');
           return done();
         });
       });
@@ -759,8 +763,10 @@
         });
       });
       it('should create new file', function(done) {
-        return fs.appendFile('/var/www/index.php', 'hello', function() {
-          expect(fs._data['/var/www/index.php'].data.toString('utf8')).to.be.equal('hello');
+        return fs.appendFile('/var/www/index.php', 'hello', function(err) {
+          expect(fs.readFileSync('/var/www/index.php', {
+            encoding: 'utf8'
+          })).to.be.equal('hello');
           return done();
         });
       });
@@ -771,7 +777,9 @@
           }
         });
         return fs.appendFile('/var/www/index.php', new Buffer(', two'), function() {
-          expect(fs._data['/var/www/index.php'].data.toString('utf8')).to.be.equal('one, two');
+          expect(fs.readFileSync('/var/www/index.php', {
+            encoding: 'utf8'
+          })).to.be.equal('one, two');
           return done();
         });
       });

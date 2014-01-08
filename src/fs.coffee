@@ -10,6 +10,7 @@ isFunction   = (obj)   -> return Object.prototype.toString.call(obj) == '[object
 isReadable   = (flags) -> return flags in ['r', 'r+', 'rs', 'rs+', 'w+', 'wx+', 'a+', 'ax+']
 isWritable   = (flags) -> return flags in ['r+', 'rs+', 'w', 'wx', 'w+', 'wx+']
 isAppendable = (flags) -> return flags in ['a', 'ax', 'a+', 'ax+']
+isCreatable  = (flags) -> return flags in ['w', 'w+', 'a', 'a+']
 
 toDate = (time) ->
 	if typeof time == 'number'
@@ -166,7 +167,7 @@ class fs
 		if item.data.length > len
 			data = data.substr(0, len)
 
-		@writeSync(fd, new Buffer(data), 0, data.length, 0)
+		@writeSync(fd, new Buffer(data), 0, data.length, null)
 
 
 	#*******************************************************************************************************************
@@ -186,10 +187,11 @@ class fs
 		if !@existsSync(path)
 			Errors.notFound(path)
 
-		if !@statSync(path).isFile()
+		fd = @openSync(path, 'w')
+
+		if !@fstatSync(fd).isFile()
 			Errors.notFile(path)
 
-		fd = @openSync(path, 'w')
 		@ftruncateSync(fd, len)
 		@closeSync(fd)
 
@@ -569,23 +571,22 @@ class fs
 
 
 	openSync: (path, flags, mode = null) ->
-		if flags in ['r', 'r+'] && !@existsSync(path)
+		exists = @existsSync(path)
+
+		if flags in ['r', 'r+'] && !exists
 			Errors.notFound(path)
 
-		if flags in ['wx', 'wx+', 'ax', 'ax+'] && @existsSync(path)
+		if flags in ['wx', 'wx+', 'ax', 'ax+'] && exists
 			Errors.alreadyExists(path)
-
-		if flags in ['w', 'w+', 'a', 'a+'] && !@existsSync(path)
-			options = {}
-			if mode != null then options.mode = mode
-			@writeFileSync(path, '', options)
 
 		@_fileDescriptors[@_fileDescriptorsCounter] =
 			path: path
 			flags: flags
 
-		@_fileDescriptorsCounter++
+		if isCreatable(flags) && !exists
+			@_addPath(path, mode: mode, 'file')
 
+		@_fileDescriptorsCounter++
 		return @_fileDescriptorsCounter - 1
 
 
@@ -654,7 +655,7 @@ class fs
 	#*******************************************************************************************************************
 
 
-	write: (fd, buffer, offset, length, position, callback = null) ->
+	write: (fd, buffer, offset, length, position = null, callback = null) ->
 		try
 			@writeSync(fd, buffer, offset, length, position)
 			callback(null, length, buffer) if callback isnt null
@@ -662,23 +663,31 @@ class fs
 			callback(err, null, buffer) if callback isnt null
 
 
-	writeSync: (fd, buffer, offset, length, position = 0) ->
+	writeSync: (fd, buffer, offset, length, position = null) ->
 		if !@_hasFd(fd)
 			Errors.fdNotFound(fd)
 
-		path = @_fileDescriptors[fd].path
+		fdData = @_fileDescriptors[fd]
+		path = fdData.path
 
-		if !isWritable(@_fileDescriptors[fd].flags)
+		if !isWritable(fdData.flags)
 			Errors.notWritable(path)
 
-		if !@statSync(path).isFile()
+		stats = @fstatSync(fd)
+
+		if !stats.isFile()
 			Errors.notFile(path)
 
 		item = @_data[path]
 		data = buffer.toString('utf8', offset).substr(0, length)
 
-		if position != 0
-			oldData = @readFileSync(path, encoding: 'utf8')
+		if position != null
+			buffer = new Buffer(stats.size)
+			oldFlags = fdData.flags		# workaround for reading
+			fdData.flags = 'r'
+			@readSync(fd, buffer, 0, stats.size, 0)
+			fdData.flags = oldFlags
+			oldData = buffer.toString('utf8')
 			data = [oldData.slice(0, position), data, oldData.slice(position)].join('')
 
 		item.data = new Buffer(data)
@@ -704,12 +713,13 @@ class fs
 		if !@_hasFd(fd)
 			Errors.fdNotFound(fd)
 
-		path = @_fileDescriptors[fd].path
+		item = @_fileDescriptors[fd]
+		path = item.path
 
-		if !isReadable(@_fileDescriptors[fd].flags)
+		if !isReadable(item.flags)
 			Errors.notReadable(path)
 
-		if !@statSync(path).isFile()
+		if !@fstatSync(fd).isFile()
 			Errors.notFile(path)
 
 		item = @_data[path]
@@ -745,7 +755,7 @@ class fs
 		if typeof options.flag == 'undefined' then options.flag = 'r'
 
 		fd = @openSync(filename, options.flag)
-		size = @statSync(filename).size
+		size = @fstatSync(fd).size
 		buffer = new Buffer(size)
 
 		@readSync(fd, buffer, 0, size, null)
@@ -781,7 +791,7 @@ class fs
 		if typeof options.flag == 'undefined' then options.flag = 'w'
 
 		fd = @openSync(filename, options.flag, options.mode)
-		@writeSync(fd, new Buffer(data, options.encoding), 0, data.length, 0)
+		@writeSync(fd, new Buffer(data, options.encoding), 0, data.length, null)
 		@closeSync(fd)
 
 		@_expandPath(filename)
@@ -853,9 +863,10 @@ class fs
 			Errors.notFound(filename)
 
 		watcher = new FSWatcher(listener)
+		stats = @statSync(filename)
 
-		@statSync(filename).on 'modified', (stats) -> watcher.emit('change', 'change', stats._path)
-		@statSync(filename).on 'modifiedAttributes', (stats, event) -> watcher.emit('change', event, stats._path)
+		stats.on 'modified', (stats) -> watcher.emit('change', 'change', stats._path)
+		stats.on 'modifiedAttributes', (stats, event) -> watcher.emit('change', event, stats._path)
 
 		return watcher
 
@@ -930,7 +941,10 @@ class fs
 			if typeof chunk == 'string'
 				chunk = new Buffer(chunk)
 
-			@write(fd, chunk, 0, chunk.length, position, ->
+			@write(fd, chunk, 0, chunk.length, position, (err) ->
+				if err
+					throw err
+
 				position += chunk.length
 				next()
 			)

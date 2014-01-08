@@ -527,26 +527,26 @@ describe 'fs', ->
 			)
 
 		it 'should create new file if it does not exists (flag: w)', (done) ->
-			fs.open('/var/www/index.php', 'w', ->
-				expect(fs.statSync('/var/www/index.php').isFile())
+			fs.open('/var/www/index.php', 'w', (err, fd) ->
+				expect(fs.fstatSync(fd).isFile()).to.be.true
 				done()
 			)
 
 		it 'should create new file if it does not exists (flag: w+)', (done) ->
-			fs.open('/var/www/index.php', 'w+', ->
-				expect(fs.statSync('/var/www/index.php').isFile())
+			fs.open('/var/www/index.php', 'w+', (err, fd) ->
+				expect(fs.fstatSync(fd).isFile()).to.be.true
 				done()
 			)
 
 		it 'should create new file if it does not exists (flag: a)', (done) ->
-			fs.open('/var/www/index.php', 'a', ->
-				expect(fs.statSync('/var/www/index.php').isFile())
+			fs.open('/var/www/index.php', 'a', (err, fd) ->
+				expect(fs.fstatSync(fd).isFile()).to.be.true
 				done()
 			)
 
 		it 'should create new file if it does not exists (flag: a+)', (done) ->
-			fs.open('/var/www/index.php', 'a+', ->
-				expect(fs.statSync('/var/www/index.php').isFile())
+			fs.open('/var/www/index.php', 'a+', (err, fd) ->
+				expect(fs.fstatSync(fd).isFile()).to.be.true
 				done()
 			)
 
@@ -588,14 +588,15 @@ describe 'fs', ->
 
 		it 'should change atime and mtime', (done) ->
 			fs._setTree('/var/www >>': {})
-			atime = fs.statSync('/var/www').atime
-			mtime = fs.statSync('/var/www').mtime
 
 			fs.open('/var/www', 'r', (err, fd) ->
+				atime = fs.fstatSync(fd).atime
+				mtime = fs.fstatSync(fd).mtime
+
 				setTimeout( ->
 					fs.futimes(fd, new Date, new Date, ->
-						expect(fs.statSync('/var/www').atime.getTime()).not.to.be.equal(atime.getTime())
-						expect(fs.statSync('/var/www').mtime.getTime()).not.to.be.equal(mtime.getTime())
+						expect(fs.fstatSync(fd).atime.getTime()).not.to.be.equal(atime.getTime())
+						expect(fs.fstatSync(fd).mtime.getTime()).not.to.be.equal(mtime.getTime())
 						done()
 					)
 				, 100)
@@ -644,8 +645,8 @@ describe 'fs', ->
 		it 'should write data to file', (done) ->
 			fs._setTree('/var/www/index.php': {data: 'hello word'})
 			fs.open('/var/www/index.php', 'w', (err, fd) ->
-				fs.write(fd, new Buffer('hello'), 0, 5, 0, ->
-					expect(fs._data['/var/www/index.php'].data.toString('utf8')).to.be.equal('hello')
+				fs.write(fd, new Buffer('hello'), 0, 5, null, ->
+					expect(fs.readFileSync('/var/www/index.php', encoding: 'utf8')).to.be.equal('hello')
 					done()
 				)
 			)
@@ -687,7 +688,7 @@ describe 'fs', ->
 		it 'should read all data', (done) ->
 			fs._setTree('/var/www/index.php': {data: 'hello word'})
 			fs.open('/var/www/index.php', 'r', (err, fd) ->
-				size = fs.statSync('/var/www/index.php').size
+				size = fs.fstatSync(fd).size
 				buffer = new Buffer(size)
 				fs.read(fd, buffer, 0, size, null, (err, bytesRead, buffer) ->
 					expect(bytesRead).to.be.equal(size)
@@ -700,7 +701,7 @@ describe 'fs', ->
 		it 'should read all data byte by byte', (done) ->
 			fs._setTree('/var/www/index.php': {data: 'hello word'})
 			fs.open('/var/www/index.php', 'r', (err, fd) ->
-				size = fs.statSync('/var/www/index.php').size
+				size = fs.fstatSync(fd).size
 				buffer = new Buffer(size)
 				bytesRead = 0
 
@@ -763,14 +764,14 @@ describe 'fs', ->
 		it 'should create new file', (done) ->
 			fs.writeFile('/var/www/index.php', '', ->
 				expect(fs._data).to.have.keys(['/var/www/index.php', '/var/www', '/var'])
-				expect(fs._data['/var/www/index.php'].stats.isFile()).to.be.true
+				expect(fs.statSync('/var/www/index.php').isFile()).to.be.true
 				done()
 			)
 
 		it 'should rewrite old file', (done) ->
 			fs._setTree('/var/www/index.php': {data: 'old'})
 			fs.writeFile('/var/www/index.php', 'new', ->
-				expect(fs._data['/var/www/index.php'].data.toString('utf8')).to.be.equal('new')
+				expect(fs.readFileSync('/var/www/index.php', encoding: 'utf8')).to.be.equal('new')
 				done()
 			)
 
@@ -791,15 +792,15 @@ describe 'fs', ->
 			)
 
 		it 'should create new file', (done) ->
-			fs.appendFile('/var/www/index.php', 'hello', ->
-				expect(fs._data['/var/www/index.php'].data.toString('utf8')).to.be.equal('hello')
+			fs.appendFile('/var/www/index.php', 'hello', (err) ->
+				expect(fs.readFileSync('/var/www/index.php', encoding: 'utf8')).to.be.equal('hello')
 				done()
 			)
 
 		it 'should append data to file with buffer', (done) ->
 			fs._setTree('/var/www/index.php': {data: 'one'})
 			fs.appendFile('/var/www/index.php', new Buffer(', two'), ->
-				expect(fs._data['/var/www/index.php'].data.toString('utf8')).to.be.equal('one, two')
+				expect(fs.readFileSync('/var/www/index.php', encoding: 'utf8')).to.be.equal('one, two')
 				done()
 			)
 
