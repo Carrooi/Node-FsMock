@@ -646,6 +646,53 @@ describe 'fs', ->
 				done()
 			)
 
+	describe '#watch()', ->
+
+		it 'should throw an error if path does not exists', ->
+			expect( -> fs.watch('/var/www')).to.throw(Error, "File or directory '/var/www' does not exists.")
+
+		it 'should call listener when attributes were changed', (done) ->
+			fs._setTree('/var/www/index.php': {})
+			fs.watch('/var/www/index.php', (event, filename) ->
+				expect(event).to.be.equal('change')
+				expect(filename).to.be.equal('/var/www/index.php')
+				done()
+			)
+			fs.utimesSync('/var/www/index.php', new Date, new Date)
+
+		it 'should call listener when file was renamed', (done) ->
+			fs._setTree('/var/www/index.php': {})
+			fs.watch('/var/www/index.php', (event, filename) ->
+				expect(event).to.be.equal('rename')
+				expect(filename).to.be.equal('/var/www/default.php')
+				done()
+			)
+			fs.renameSync('/var/www/index.php', '/var/www/default.php')
+
+		it 'should call listener when data was changed', (done) ->
+			fs._setTree('/var/www/index.php': {})
+			fs.watch('/var/www/index.php', (event, filename) ->
+				expect(event).to.be.equal('change')
+				expect(filename).to.be.equal('/var/www/index.php')
+				expect(fs.readFileSync('/var/www/index.php', encoding: 'utf8')).to.be.equal('hello word')
+				done()
+			)
+			fs.writeFileSync('/var/www/index.php', 'hello word')
+
+		it 'should close watching', (done) ->
+			fs._setTree('/var/www/index.php': {})
+			called = false
+			watcher = fs.watch('/var/www/index.php', (event, filename) ->
+				called = true
+			)
+			watcher.close()
+			fs.utimesSync('/var/www/index.php', new Date, new Date)
+			setTimeout( ->
+				expect(called).to.be.false
+				done()
+			, 50)
+
+
 	describe '#exists()', ->
 
 		it 'should return false when file does not exists', (done) ->

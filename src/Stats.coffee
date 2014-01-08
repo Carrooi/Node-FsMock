@@ -1,6 +1,7 @@
 Errors = require './Errors'
+EventEmitter = require('events').EventEmitter
 
-class Stats
+class Stats extends EventEmitter
 
 
 	_path: null
@@ -50,13 +51,36 @@ class Stats
 		@mtime = new Date
 		@ctime = new Date
 
+		@emit 'modified', @
 
-	_modifiedAttributes: ->
+
+	_modifiedAttributes: (event = 'change') ->
 		@ctime = new Date
+
+		@emit 'modifiedAttributes', @, event
 
 
 	_accessed: ->
 		@atime = new Date
+
+		@emit 'accessed', @
+
+
+	_setAttributes: (attributes = {}) ->
+		for name, value of attributes
+			if Object.prototype.toString.call(@[name]) != '[object Function]'
+				@[name] = value
+
+		@_modifiedAttributes()
+
+
+	_clone: ->
+		stats = new Stats(@_path, {})
+		for name, value of @
+			if Object.prototype.toString.call(@[name]) != '[object Function]'
+				stats[name] = @[name]
+
+		return stats
 
 
 	isFile: ->

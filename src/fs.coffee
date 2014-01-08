@@ -1,5 +1,6 @@
 Stats = require './Stats'
 Errors = require './Errors'
+FSWatcher = require './FSWatcher'
 escape = require 'escape-regexp'
 _path = require 'path'
 Readable = require('stream').Readable
@@ -48,10 +49,7 @@ class fs
 
 
 	_setAttributes: (path, attributes = {}) ->
-		for name, value of attributes
-			@_data[path].stats[name] = value
-
-		@_data[path].stats._modifiedAttributes()
+		@_data[path].stats._setAttributes(attributes)
 
 
 	_addPath: (path, data = {}, type = null) ->
@@ -141,7 +139,8 @@ class fs
 		@_data[newPath] = @_data[oldPath]
 		delete @_data[oldPath]
 
-		@_data[newPath].stats._modifiedAttributes()
+		@_data[newPath].stats._path = newPath
+		@_data[newPath].stats._modifiedAttributes('rename')
 
 
 	#*******************************************************************************************************************
@@ -626,12 +625,10 @@ class fs
 		if !@_hasFd(fd)
 			Errors.fdNotFound(fd)
 
-		item = @_data[@_fileDescriptors[fd].path]
-
-		item.stats.atime = toDate(atime)
-		item.stats.mtime = toDate(mtime)
-
-		item.stats._modifiedAttributes()
+		@_setAttributes(@_fileDescriptors[fd].path,
+			atime: toDate(atime)
+			mtime: toDate(mtime)
+		)
 
 
 	#*******************************************************************************************************************
@@ -786,7 +783,6 @@ class fs
 		@writeSync(fd, new Buffer(data, options.encoding), 0, data.length, 0)
 		@closeSync(fd)
 
-		@_data[filename].stats._modified()
 		@_expandPath(filename)
 
 
@@ -806,6 +802,7 @@ class fs
 			callback(err, null)
 
 
+	# todo: write at position
 	appendFileSync: (filename, data, options = {}) ->
 		if typeof options.encoding == 'undefined' then options.encoding = 'utf8'
 		if typeof options.mode == 'undefined' then options.mode = 438
@@ -856,7 +853,15 @@ class fs
 			listener = options
 			options = null
 
-		Errors.notImplemented 'watch'
+		if !@existsSync(filename)
+			Errors.notFound(filename)
+
+		watcher = new FSWatcher(listener)
+
+		@statSync(filename).on 'modified', (stats) -> watcher.emit('change', 'change', stats._path)
+		@statSync(filename).on 'modifiedAttributes', (stats, event) -> watcher.emit('change', event, stats._path)
+
+		return watcher
 
 
 	#*******************************************************************************************************************
