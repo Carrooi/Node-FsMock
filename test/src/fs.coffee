@@ -37,10 +37,10 @@ describe 'fs', ->
 				'/var', '/var/www/index.php', '/var/www', '/home/david/documents/school/projects', '/home/david/documents/school',
 				'/home/david/documents', '/home/david', '/home', '/home/john', '/home/john/passwords.txt'
 			])
-			expect(fs._data['/var/www/index.php'].stats.isFile()).to.be.true
-			expect(fs._data['/var/www'].stats.isDirectory()).to.be.true
-			expect(fs._data['/home/john'].stats.isDirectory()).to.be.true
-			expect(fs._data['/home/john/passwords.txt'].stats.isFile()).to.be.true
+			expect(fs.statSync('/var/www/index.php').isFile()).to.be.true
+			expect(fs.statSync('/var/www').isDirectory()).to.be.true
+			expect(fs.statSync('/home/john').isDirectory()).to.be.true
+			expect(fs.statSync('/home/john/passwords.txt').isFile()).to.be.true
 
 
 	#*******************************************************************************************************************
@@ -69,7 +69,7 @@ describe 'fs', ->
 			fs._setTree('/var/www >>': {})
 			fs.rename('/var/www', '/var/old_www', (err) ->
 				expect(err).to.not.exists
-				expect(fs._data['/var/www']).not.to.exists
+				expect(fs.existsSync('/var/www')).to.be.false
 				expect(fs._data).to.have.keys(['/var', '/var/old_www'])
 				done()
 			)
@@ -102,7 +102,7 @@ describe 'fs', ->
 			fs._setTree('/var/www/index.php': {data: 'hello word'})
 			fd = fs.openSync('/var/www/index.php', 'w+')
 			fs.ftruncate(fd, 5, ->
-				expect(fs._data['/var/www/index.php'].data.toString('utf8')).to.be.equal('hello')
+				expect(fs.readFileSync('/var/www/index.php', encoding: 'utf8')).to.be.equal('hello')
 				done()
 			)
 
@@ -132,14 +132,14 @@ describe 'fs', ->
 		it 'should leave file data if needed length is larger than data length', (done) ->
 			fs._setTree('/var/www/index.php': {data: 'hello word'})
 			fs.truncate('/var/www/index.php', 15, ->
-				expect(fs._data['/var/www/index.php'].data.toString('utf8')).to.be.equal('hello word')
+				expect(fs.readFileSync('/var/www/index.php', encoding: 'utf8')).to.be.equal('hello word')
 				done()
 			)
 
 		it 'should truncate file data', (done) ->
 			fs._setTree('/var/www/index.php': {data: 'hello word'})
 			fs.truncate('/var/www/index.php', 5, ->
-				expect(fs._data['/var/www/index.php'].data.toString('utf8')).to.be.equal('hello')
+				expect(fs.readFileSync('/var/www/index.php', encoding: 'utf8')).to.be.equal('hello')
 				done()
 			)
 
@@ -161,8 +161,9 @@ describe 'fs', ->
 		it 'should change uid and gid', (done) ->
 			fs._setTree('/var/www >>': {})
 			fs.chown('/var/www', 300, 200, ->
-				expect(fs._data['/var/www'].stats.uid).to.be.equal(300)
-				expect(fs._data['/var/www'].stats.gid).to.be.equal(200)
+				stats = fs.statSync('/var/www')
+				expect(stats.uid).to.be.equal(300)
+				expect(stats.gid).to.be.equal(200)
 				done()
 			)
 
@@ -185,8 +186,9 @@ describe 'fs', ->
 			fs._setTree('/var/www >>': {})
 			fs.open('/var/www', 'r', (err, fd) ->
 				fs.fchown(fd, 300, 400, ->
-					expect(fs._data['/var/www'].stats.uid).to.be.equal(300)
-					expect(fs._data['/var/www'].stats.gid).to.be.equal(400)
+					stats = fs.fstatSync(fd)
+					expect(stats.uid).to.be.equal(300)
+					expect(stats.gid).to.be.equal(400)
 					done()
 				)
 			)
@@ -209,7 +211,7 @@ describe 'fs', ->
 		it 'should change mode', (done) ->
 			fs._setTree('/var/www >>': {})
 			fs.chmod('/var/www', 777, ->
-				expect(fs._data['/var/www'].stats.mode).to.be.equal(777)
+				expect(fs.statSync('/var/www').mode).to.be.equal(777)
 				done()
 			)
 
@@ -231,8 +233,8 @@ describe 'fs', ->
 		it 'should change mode', (done) ->
 			fs._setTree('/var/www/index.php': {})
 			fs.open('/var/www/index.php', 'r', (err, fd) ->
-				fs.fchmod(1, 777, ->
-					expect(fs._data['/var/www/index.php'].stats.mode).to.be.equal(777)
+				fs.fchmod(fd, 777, ->
+					expect(fs.fstatSync(fd).mode).to.be.equal(777)
 					done()
 				)
 			)
@@ -444,8 +446,8 @@ describe 'fs', ->
 					'/var/www/index.php'
 					'/var/www/project'
 				])
-				expect(fs._data['/var/www/index.php'].stats.isFile()).to.be.true
-				expect(fs._data['/var/www/project'].stats.isDirectory()).to.be.true
+				expect(fs.statSync('/var/www/index.php').isFile()).to.be.true
+				expect(fs.statSync('/var/www/project').isDirectory()).to.be.true
 				done()
 			)
 

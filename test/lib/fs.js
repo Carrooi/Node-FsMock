@@ -39,10 +39,10 @@
           }
         });
         expect(fs._data).to.have.keys(['/var', '/var/www/index.php', '/var/www', '/home/david/documents/school/projects', '/home/david/documents/school', '/home/david/documents', '/home/david', '/home', '/home/john', '/home/john/passwords.txt']);
-        expect(fs._data['/var/www/index.php'].stats.isFile()).to.be["true"];
-        expect(fs._data['/var/www'].stats.isDirectory()).to.be["true"];
-        expect(fs._data['/home/john'].stats.isDirectory()).to.be["true"];
-        return expect(fs._data['/home/john/passwords.txt'].stats.isFile()).to.be["true"];
+        expect(fs.statSync('/var/www/index.php').isFile()).to.be["true"];
+        expect(fs.statSync('/var/www').isDirectory()).to.be["true"];
+        expect(fs.statSync('/home/john').isDirectory()).to.be["true"];
+        return expect(fs.statSync('/home/john/passwords.txt').isFile()).to.be["true"];
       });
     });
     describe('#rename()', function() {
@@ -70,7 +70,7 @@
         });
         return fs.rename('/var/www', '/var/old_www', function(err) {
           expect(err).to.not.exists;
-          expect(fs._data['/var/www']).not.to.exists;
+          expect(fs.existsSync('/var/www')).to.be["false"];
           expect(fs._data).to.have.keys(['/var', '/var/old_www']);
           return done();
         });
@@ -105,7 +105,9 @@
         });
         fd = fs.openSync('/var/www/index.php', 'w+');
         return fs.ftruncate(fd, 5, function() {
-          expect(fs._data['/var/www/index.php'].data.toString('utf8')).to.be.equal('hello');
+          expect(fs.readFileSync('/var/www/index.php', {
+            encoding: 'utf8'
+          })).to.be.equal('hello');
           return done();
         });
       });
@@ -135,7 +137,9 @@
           }
         });
         return fs.truncate('/var/www/index.php', 15, function() {
-          expect(fs._data['/var/www/index.php'].data.toString('utf8')).to.be.equal('hello word');
+          expect(fs.readFileSync('/var/www/index.php', {
+            encoding: 'utf8'
+          })).to.be.equal('hello word');
           return done();
         });
       });
@@ -146,7 +150,9 @@
           }
         });
         return fs.truncate('/var/www/index.php', 5, function() {
-          expect(fs._data['/var/www/index.php'].data.toString('utf8')).to.be.equal('hello');
+          expect(fs.readFileSync('/var/www/index.php', {
+            encoding: 'utf8'
+          })).to.be.equal('hello');
           return done();
         });
       });
@@ -164,8 +170,10 @@
           '/var/www >>': {}
         });
         return fs.chown('/var/www', 300, 200, function() {
-          expect(fs._data['/var/www'].stats.uid).to.be.equal(300);
-          expect(fs._data['/var/www'].stats.gid).to.be.equal(200);
+          var stats;
+          stats = fs.statSync('/var/www');
+          expect(stats.uid).to.be.equal(300);
+          expect(stats.gid).to.be.equal(200);
           return done();
         });
       });
@@ -184,8 +192,10 @@
         });
         return fs.open('/var/www', 'r', function(err, fd) {
           return fs.fchown(fd, 300, 400, function() {
-            expect(fs._data['/var/www'].stats.uid).to.be.equal(300);
-            expect(fs._data['/var/www'].stats.gid).to.be.equal(400);
+            var stats;
+            stats = fs.fstatSync(fd);
+            expect(stats.uid).to.be.equal(300);
+            expect(stats.gid).to.be.equal(400);
             return done();
           });
         });
@@ -204,7 +214,7 @@
           '/var/www >>': {}
         });
         return fs.chmod('/var/www', 777, function() {
-          expect(fs._data['/var/www'].stats.mode).to.be.equal(777);
+          expect(fs.statSync('/var/www').mode).to.be.equal(777);
           return done();
         });
       });
@@ -222,8 +232,8 @@
           '/var/www/index.php': {}
         });
         return fs.open('/var/www/index.php', 'r', function(err, fd) {
-          return fs.fchmod(1, 777, function() {
-            expect(fs._data['/var/www/index.php'].stats.mode).to.be.equal(777);
+          return fs.fchmod(fd, 777, function() {
+            expect(fs.fstatSync(fd).mode).to.be.equal(777);
             return done();
           });
         });
@@ -414,8 +424,8 @@
         });
         return fs.readdir('/var/www', function(err, files) {
           expect(files).to.be.eql(['/var/www/index.php', '/var/www/project']);
-          expect(fs._data['/var/www/index.php'].stats.isFile()).to.be["true"];
-          expect(fs._data['/var/www/project'].stats.isDirectory()).to.be["true"];
+          expect(fs.statSync('/var/www/index.php').isFile()).to.be["true"];
+          expect(fs.statSync('/var/www/project').isDirectory()).to.be["true"];
           return done();
         });
       });
