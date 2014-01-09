@@ -34,6 +34,7 @@ class fs
 		@_data = {}
 		@_fileDescriptors = []
 
+		@_addPath('/', {})
 		@_setTree(tree, info)
 
 
