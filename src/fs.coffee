@@ -359,12 +359,22 @@ class fs
 
 
 	lchmod: (path, mode, callback) ->
-		@lchmodSync(path, mode)
-		callback()
+		try
+			@lchmodSync(path, mode)
+			callback(null)
+		catch err
+			callback(err)
 
 
 	lchmodSync: (path, mode) ->
-		Errors.notImplemented 'lchmod'
+		path = @realpathSync(path)
+
+		if !@existsSync(path)
+			Errors.notFound(path)
+
+		@_setAttributes(path,
+			mode: mode
+		)
 
 
 	#*******************************************************************************************************************

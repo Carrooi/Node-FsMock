@@ -242,6 +242,23 @@
         });
       });
     });
+    describe('#lchmod()', function() {
+      it('should return an error if path does not exists', function(done) {
+        return fs.lchmod('/var/www', 777, function(err) {
+          expect(err).to.be.an["instanceof"](Error);
+          expect(err.message).to.be.equal("File or directory '/var/www' does not exists.");
+          return done();
+        });
+      });
+      return it('should change mode of symlink', function(done) {
+        fs.writeFileSync('/var/www/index.php', '');
+        fs.symlinkSync('/var/www/index.php', '/var/www/default.php');
+        return fs.lchmod('/var/www/default.php', 777, function() {
+          expect(fs.lstatSync('/var/www/default.php').mode).to.be.equal(777);
+          return done();
+        });
+      });
+    });
     describe('#stat()', function() {
       it('should return an error if path does not exists', function(done) {
         return fs.stat('/var/www', function(err) {

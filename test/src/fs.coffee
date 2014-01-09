@@ -261,6 +261,29 @@ describe 'fs', ->
 
 
 	#*******************************************************************************************************************
+	#										LCHMOD
+	#*******************************************************************************************************************
+
+
+	describe '#lchmod()', ->
+
+		it 'should return an error if path does not exists', (done) ->
+			fs.lchmod('/var/www', 777, (err) ->
+				expect(err).to.be.an.instanceof(Error)
+				expect(err.message).to.be.equal("File or directory '/var/www' does not exists.")
+				done()
+			)
+
+		it 'should change mode of symlink', (done) ->
+			fs.writeFileSync('/var/www/index.php', '')
+			fs.symlinkSync('/var/www/index.php', '/var/www/default.php')
+			fs.lchmod('/var/www/default.php', 777, ->
+				expect(fs.lstatSync('/var/www/default.php').mode).to.be.equal(777)
+				done()
+			)
+
+
+	#*******************************************************************************************************************
 	#										STAT
 	#*******************************************************************************************************************
 

@@ -24,7 +24,7 @@ Calling unsupported methods will throw an exception.
 * `fs.lchown()`: yes
 * `fs.chmod()`: yes
 * `fs.fchmod()`: yes
-* `fs.lchmod()`: no
+* `fs.lchmod()`: yes
 * `fs.stat()`: yes
 * `fs.lstat()`: yes
 * `fs.fstat()`: yes
