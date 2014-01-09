@@ -10,6 +10,10 @@ class Stats extends EventEmitter
 
 	_isDirectory: false
 
+	_isLink: false
+
+	_isSymlink: false
+
 	dev: 0
 
 	ino: 0

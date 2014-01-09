@@ -57,6 +57,7 @@ class fs
 		if typeof data.stats == 'undefined' then data.stats = {}
 		if typeof data.mode == 'undefined' then data.mode = 777
 		if typeof data.encoding == 'undefined' then data.encoding = 'utf8'
+		if typeof data.source == 'undefined' then data.source = null
 
 		if type == null
 			if path.match(/\s>>$/) != null
@@ -65,29 +66,42 @@ class fs
 			else
 				type = 'file'
 
-		@_data[path] =
-			stats: new Stats(path, data.stats)
+		stats = new Stats(path, data.stats)
+		stats.mode = data.mode
 
-		@_data[path].stats.mode = data.mode
+		@_data[path] = {}
 
-		if type == 'directory'
-			@_data[path].stats._isDirectory = true
+		item = @_data[path]
+		item.stats = stats
 
-			if typeof data.paths != 'undefined'
-				for subPath, subData of data.paths
-					@_addPath(path + '/' + subPath, subData)
+		switch type
+			when 'directory'
+				stats._isDirectory = true
 
-		else if type == 'file'
-			@_data[path].stats._isFile = true
+				if typeof data.paths != 'undefined'
+					for subPath, subData of data.paths
+						@_addPath(path + '/' + subPath, subData)
 
-			if typeof data.data == 'undefined'
-				@_data[path].data = new Buffer('', data.encoding)
-			else if data.data instanceof Buffer
-				@_data[path].data = data.data
+			when 'file'
+				stats._isFile = true
+
+				if typeof data.data == 'undefined'
+					item.data = new Buffer('', data.encoding)
+				else if data.data instanceof Buffer
+					item.data = data.data
+				else
+					item.data = new Buffer(data.data, data.encoding)
+
+				stats.blksize = stats.size = item.data.length
+
+			when 'link'
+				stats._isLink = true
+
+			when 'symlink'
+				stats._isSymlink = true
+
 			else
-				@_data[path].data = new Buffer(data.data, data.encoding)
-
-			@_data[path].stats.blksize = @_data[path].stats.size = @_data[path].data.length
+				throw new Error "Type must be directory, file, link or symlink, #{type} given."
 
 
 	_expandPaths: ->
