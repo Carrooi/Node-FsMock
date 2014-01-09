@@ -47,7 +47,7 @@ Calling unsupported methods will throw an exception.
 * `fs.appendFile()`: yes
 * `fs.watchFile()`: no (use fs.watch())
 * `fs.unwatchFile()`: no (use fs.watch())
-* `fs.watch()`: yes
+* `fs.watch()`: yes (persistent option is ignored)
 * `fs.exists()`: yes
 * `fs.createReadStream()`: yes
 * `fs.createWriteStream()`: yes
