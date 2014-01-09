@@ -291,7 +291,6 @@
         fs.writeFileSync('/var/www/index.php', '');
         return fs.symlink('/var/www/index.php', '/var/www/default.php', function() {
           expect(fs.existsSync('/var/www/default.php')).to.be["true"];
-          expect(fs.statSync('/var/www/default.php').isSymbolicLink()).to.be["true"];
           return done();
         });
       });

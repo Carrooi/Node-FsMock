@@ -324,7 +324,6 @@ describe 'fs', ->
 			fs.writeFileSync('/var/www/index.php', '')
 			fs.symlink('/var/www/index.php', '/var/www/default.php', ->
 				expect(fs.existsSync('/var/www/default.php')).to.be.true
-				expect(fs.statSync('/var/www/default.php').isSymbolicLink()).to.be.true
 				done()
 			)
 

@@ -147,6 +147,21 @@ class fs
 		@_expandPaths()
 
 
+	_realpath: (path) ->
+		if path[0] == '.'
+			path = _path.join('/', path)
+
+		return _path.normalize(path)
+
+
+	_getSourcePath: (path) ->
+		path = @_realpath(path)
+		if @_data[path]?.stats.isSymbolicLink()
+			path = @_data[path].source
+
+		return path
+
+
 	#*******************************************************************************************************************
 	#										RENAME
 	#*******************************************************************************************************************
@@ -161,6 +176,9 @@ class fs
 
 
 	renameSync: (oldPath, newPath) ->
+		oldPath = @realpathSync(oldPath)
+		newPath = @_realpath(newPath)
+
 		if !@existsSync(oldPath)
 			Errors.notFound(oldPath)
 
@@ -214,6 +232,8 @@ class fs
 
 
 	truncateSync: (path, len) ->
+		path = @_getSourcePath(path)
+
 		if !@existsSync(path)
 			Errors.notFound(path)
 
@@ -240,6 +260,8 @@ class fs
 
 
 	chownSync: (path, uid, gid) ->
+		path = @_getSourcePath(path)
+
 		fd = @openSync(path, 'r')
 		@fchownSync(fd, uid, gid)
 		@closeSync(fd)
@@ -293,6 +315,8 @@ class fs
 
 
 	chmodSync: (path, mode) ->
+		path = @_getSourcePath(path)
+
 		fd = @openSync(path, 'r', mode)
 		@fchmodSync(fd, mode)
 		@closeSync(fd)
@@ -345,6 +369,8 @@ class fs
 
 
 	statSync: (path) ->
+		path = @_getSourcePath(path)
+
 		fd = @openSync(path, 'r')
 		result = @fstatSync(fd)
 		@closeSync(fd)
@@ -398,6 +424,9 @@ class fs
 
 
 	linkSync: (srcpath, dstpath) ->
+		srcpath = @realpathSync(srcpath)
+		dstpath = @_realpath(dstpath)
+
 		if !@existsSync(srcpath)
 			Errors.notFound(srcpath)
 
@@ -422,6 +451,9 @@ class fs
 
 
 	symlinkSync: (srcpath, dstpath, type = null) ->
+		srcpath = @realpathSync(srcpath)
+		dstpath = @_realpath(dstpath)
+
 		if !@existsSync(srcpath)
 			Errors.notFound(srcpath)
 
@@ -441,14 +473,10 @@ class fs
 
 
 	readlinkSync: (path) ->
-		path = @realpathSync(path)
+		path = @_getSourcePath(path)
 
 		if !@existsSync(path)
 			Errors.notFound(path)
-
-		stats = @statSync(path)
-		if stats._isLink || stats.isSymbolicLink()
-			return @_data[path].source
 
 		return path
 
@@ -473,10 +501,7 @@ class fs
 		if cache != null && typeof cache[path] != 'undefined'
 			return cache[path]
 
-		if path[0] == '.'
-			path = _path.join('/', path)
-
-		path = _path.normalize(path)
+		path = @_realpath(path)
 
 		if !@existsSync(path)
 			Errors.notFound(path)
@@ -498,6 +523,8 @@ class fs
 
 
 	unlinkSync: (path) ->
+		path = @realpathSync(path)
+
 		if !@existsSync(path)
 			Errors.notFound(path)
 
@@ -521,6 +548,8 @@ class fs
 
 
 	rmdirSync: (path) ->
+		path = @realpathSync(path)
+
 		if !@existsSync(path)
 			Errors.notFound(path)
 
@@ -551,6 +580,8 @@ class fs
 
 
 	mkdirSync: (path, mode = null) ->
+		path = @_realpath(path)
+
 		if @existsSync(path)
 			Errors.alreadyExists(path)
 
@@ -571,6 +602,8 @@ class fs
 
 
 	readdirSync: (path) ->
+		path = @_getSourcePath(path)
+
 		if !@existsSync(path)
 			Errors.notFound(path)
 
@@ -624,6 +657,7 @@ class fs
 
 
 	openSync: (path, flags, mode = null) ->
+		path = @_getSourcePath(path)
 		exists = @existsSync(path)
 
 		if flags in ['r', 'r+'] && !exists
@@ -657,6 +691,8 @@ class fs
 
 
 	utimesSync: (path, atime, mtime) ->
+		path = @realpathSync(path)
+
 		fd = @openSync(path, 'r')
 		@futimesSync(fd, atime, mtime)
 		@closeSync(fd)
@@ -843,6 +879,8 @@ class fs
 		if typeof options.mode == 'undefined' then options.mode = 438
 		if typeof options.flag == 'undefined' then options.flag = 'w'
 
+		filename = @_getSourcePath(filename)
+
 		fd = @openSync(filename, options.flag, options.mode)
 		@writeSync(fd, new Buffer(data, options.encoding), 0, data.length, null)
 		@closeSync(fd)
@@ -934,6 +972,7 @@ class fs
 
 
 	existsSync: (path) ->
+		path = @_realpath(path)
 		return typeof @_data[path] != 'undefined'
 
 
