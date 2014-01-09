@@ -184,6 +184,26 @@
         });
       });
     });
+    describe('#lchown()', function() {
+      it('should return an error if path does not exists', function(done) {
+        return fs.lchown('/var/www/index.php', 200, 200, function(err) {
+          expect(err).to.be.an["instanceof"](Error);
+          expect(err.message).to.be.equal("File or directory '/var/www/index.php' does not exists.");
+          return done();
+        });
+      });
+      return it('should change uid and gid of symlink', function(done) {
+        fs.writeFileSync('/var/www/index.php', '');
+        fs.symlinkSync('/var/www/index.php', '/var/www/default.php');
+        return fs.lchown('/var/www/default.php', 500, 600, function() {
+          var stats;
+          stats = fs.lstatSync('/var/www/default.php');
+          expect(stats.uid).to.be.equal(500);
+          expect(stats.gid).to.be.equal(600);
+          return done();
+        });
+      });
+    });
     describe('#chmod()', function() {
       it('should return an error if path does not exists', function(done) {
         return fs.chmod('/var/www', 777, function(err) {

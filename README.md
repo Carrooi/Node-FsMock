@@ -21,7 +21,7 @@ Calling unsupported methods will throw an exception.
 * `fs.truncate()`: yes
 * `fs.chown()`: yes
 * `fs.fchown()`: yes
-* `fs.lchown()`: no
+* `fs.lchown()`: yes
 * `fs.chmod()`: yes
 * `fs.fchmod()`: yes
 * `fs.lchmod()`: no

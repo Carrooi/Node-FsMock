@@ -190,6 +190,31 @@ describe 'fs', ->
 
 
 	#*******************************************************************************************************************
+	#										LCHOWN
+	#*******************************************************************************************************************
+
+
+	describe '#lchown()', ->
+
+		it 'should return an error if path does not exists', (done) ->
+			fs.lchown('/var/www/index.php', 200, 200, (err) ->
+				expect(err).to.be.an.instanceof(Error)
+				expect(err.message).to.be.equal("File or directory '/var/www/index.php' does not exists.")
+				done()
+			)
+
+		it 'should change uid and gid of symlink', (done) ->
+			fs.writeFileSync('/var/www/index.php', '')
+			fs.symlinkSync('/var/www/index.php', '/var/www/default.php')
+			fs.lchown('/var/www/default.php', 500, 600, ->
+				stats = fs.lstatSync('/var/www/default.php')
+				expect(stats.uid).to.be.equal(500)
+				expect(stats.gid).to.be.equal(600)
+				done()
+			)
+
+
+	#*******************************************************************************************************************
 	#										CHMOD
 	#*******************************************************************************************************************
 

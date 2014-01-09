@@ -293,12 +293,23 @@ class fs
 
 
 	lchown: (path, uid, gid, callback) ->
-		@lchownSync(path, uid, gid)
-		callback()
+		try
+			@lchownSync(path, uid, gid)
+			callback(null)
+		catch err
+			callback(err)
 
 
 	lchownSync: (path, uid, gid) ->
-		Errors.notImplemented 'lchown'
+		path = @realpathSync(path)
+
+		if !@existsSync(path)
+			Errors.notFound(path)
+
+		@_setAttributes(path,
+			uid: uid
+			gid: gid
+		)
 
 
 	#*******************************************************************************************************************
