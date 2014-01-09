@@ -60,11 +60,9 @@ class fs
 		if typeof info.source == 'undefined' then info.source = null
 
 		if path[0] == '@'
-			type = 'link'
-			info = {source: data}
-			path = path.substr(1)
+			return @linkSync(data, path.substr(1))
 
-		else if path[0] == '%'
+		if path[0] == '%'
 			type = 'symlink'
 			info = {source: data}
 			path = path.substr(1)
@@ -110,19 +108,13 @@ class fs
 
 				stats.blksize = stats.size = item.data.length
 
-			when 'link'
-				stats._isLink = true
-				stats._isFile = true
-
-				item.source = info.source
-
 			when 'symlink'
 				stats._isSymlink = true
 
 				item.source = info.source
 
 			else
-				throw new Error "Type must be directory, file, link or symlink, #{type} given."
+				throw new Error "Type must be directory, file or symlink, #{type} given."
 
 
 	_expandPaths: ->
@@ -409,7 +401,7 @@ class fs
 		if !@existsSync(srcpath)
 			Errors.notFound(srcpath)
 
-		@_addPath('@' + dstpath, srcpath)
+		@_data[dstpath] = @_data[srcpath]
 
 
 	#*******************************************************************************************************************

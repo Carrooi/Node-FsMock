@@ -301,7 +301,7 @@ describe 'fs', ->
 			fs.writeFileSync('/var/www/index.php', '')
 			fs.link('/var/www/index.php', '/var/www/default.php', ->
 				expect(fs.existsSync('/var/www/default.php')).to.be.true
-				expect(fs.statSync('/var/www/default.php')._isLink).to.be.true
+				expect(fs.statSync('/var/www/default.php').isFile()).to.be.true
 				done()
 			)
 
@@ -343,11 +343,11 @@ describe 'fs', ->
 				done()
 			)
 
-		it 'should get path to source file of hard link', (done) ->
+		it 'should get path of hard link', (done) ->
 			fs.writeFileSync('/var/www/index.php', '')
 			fs.link('/var/www/index.php', '/var/www/default.php', ->
 				fs.readlink('/var/www/../../var/www/something/../default.php', (err, path) ->
-					expect(path).to.be.equal('/var/www/index.php')
+					expect(path).to.be.equal('/var/www/default.php')
 					done()
 				)
 			)

@@ -274,7 +274,7 @@
         fs.writeFileSync('/var/www/index.php', '');
         return fs.link('/var/www/index.php', '/var/www/default.php', function() {
           expect(fs.existsSync('/var/www/default.php')).to.be["true"];
-          expect(fs.statSync('/var/www/default.php')._isLink).to.be["true"];
+          expect(fs.statSync('/var/www/default.php').isFile()).to.be["true"];
           return done();
         });
       });
@@ -304,11 +304,11 @@
           return done();
         });
       });
-      it('should get path to source file of hard link', function(done) {
+      it('should get path of hard link', function(done) {
         fs.writeFileSync('/var/www/index.php', '');
         return fs.link('/var/www/index.php', '/var/www/default.php', function() {
           return fs.readlink('/var/www/../../var/www/something/../default.php', function(err, path) {
-            expect(path).to.be.equal('/var/www/index.php');
+            expect(path).to.be.equal('/var/www/default.php');
             return done();
           });
         });
