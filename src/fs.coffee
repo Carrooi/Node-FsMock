@@ -107,8 +107,12 @@ class fs
 			when 'link'
 				stats._isLink = true
 
+				item.source = info.source
+
 			when 'symlink'
 				stats._isSymlink = true
+
+				item.source = info.source
 
 			else
 				throw new Error "Type must be directory, file, link or symlink, #{type} given."
