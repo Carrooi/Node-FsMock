@@ -422,12 +422,18 @@ class fs
 			callback = type
 			type = null
 
-		@symlinkSync(srcpath, dstpath, type)
-		callback()
+		try
+			@symlinkSync(srcpath, dstpath)
+			callback(null)
+		catch err
+			callback(err)
 
 
 	symlinkSync: (srcpath, dstpath, type = null) ->
-		Errors.notImplemented 'symlink'
+		if !@existsSync(srcpath)
+			Errors.notFound(srcpath)
+
+		@_addPath('%' + dstpath, srcpath)
 
 
 	#*******************************************************************************************************************
