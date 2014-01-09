@@ -1,3 +1,7 @@
+[![NPM version](https://badge.fury.io/js/fs-mock.png)](http://badge.fury.io/js/fs-mock)
+[![Dependency Status](https://gemnasium.com/sakren/node-fs-mock.png)](https://gemnasium.com/sakren/node-fs-mock)
+[![Build Status](https://travis-ci.org/sakren/node-fs-mock.png?branch=master)](https://travis-ci.org/sakren/node-fs-mock)
+
 # fs-mock
 
 Mock for fs module
