@@ -27,7 +27,7 @@
             }
           }
         });
-        expect(fs._data).to.have.keys(['/var', '/var/www/index.php', '/var/www', '/home/david/documents/school/projects', '/home/david/documents/school', '/home/david/documents', '/home/david', '/home', '/home/john', '/home/john/passwords.txt']);
+        expect(fs._data).to.have.keys(['/', '/var', '/var/www/index.php', '/var/www', '/home/david/documents/school/projects', '/home/david/documents/school', '/home/david/documents', '/home/david', '/home', '/home/john', '/home/john/passwords.txt']);
         expect(fs.statSync('/var/www/index.php').isFile()).to.be["true"];
         expect(fs.statSync('/var/www').isDirectory()).to.be["true"];
         expect(fs.statSync('/home/john').isDirectory()).to.be["true"];
@@ -56,7 +56,7 @@
         return fs.rename('/var/www', '/var/old_www', function(err) {
           expect(err).to.not.exists;
           expect(fs.existsSync('/var/www')).to.be["false"];
-          expect(fs._data).to.have.keys(['/var', '/var/old_www']);
+          expect(fs._data).to.have.keys(['/', '/var', '/var/old_www']);
           return done();
         });
       });
@@ -424,7 +424,7 @@
       return it('should remove file', function(done) {
         fs.writeFileSync('/var/www/index.php', '');
         return fs.unlink('/var/www/index.php', function() {
-          expect(fs._data).to.have.keys(['/var/www', '/var']);
+          expect(fs._data).to.have.keys(['/', '/var/www', '/var']);
           return done();
         });
       });
@@ -457,7 +457,7 @@
       return it('should remove directory', function(done) {
         fs.mkdirSync('/var/www');
         return fs.rmdir('/var/www', function() {
-          expect(fs._data).to.have.keys(['/var']);
+          expect(fs._data).to.have.keys(['/', '/var']);
           return done();
         });
       });
@@ -473,7 +473,7 @@
       });
       return it('should create new directory', function(done) {
         return fs.mkdir('/var/www', function() {
-          expect(fs._data).to.have.keys(['/var', '/var/www']);
+          expect(fs._data).to.have.keys(['/', '/var', '/var/www']);
           return done();
         });
       });
@@ -505,7 +505,7 @@
           '/home/david': {}
         });
         return fs.readdir('/var/www', function(err, files) {
-          expect(files).to.be.eql(['/var/www/index.php', '/var/www/project']);
+          expect(files).to.be.eql(['index.php', 'project']);
           expect(fs.statSync('/var/www/index.php').isFile()).to.be["true"];
           expect(fs.statSync('/var/www/project').isDirectory()).to.be["true"];
           return done();
@@ -780,7 +780,7 @@
     describe('#writeFile()', function() {
       it('should create new file', function(done) {
         return fs.writeFile('/var/www/index.php', '', function() {
-          expect(fs._data).to.have.keys(['/var/www/index.php', '/var/www', '/var']);
+          expect(fs._data).to.have.keys(['/', '/var/www/index.php', '/var/www', '/var']);
           expect(fs.statSync('/var/www/index.php').isFile()).to.be["true"];
           return done();
         });

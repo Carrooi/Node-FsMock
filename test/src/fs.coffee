@@ -29,7 +29,7 @@ describe 'fs', ->
 						'passwords.txt': ''
 			)
 			expect(fs._data).to.have.keys([
-				'/var', '/var/www/index.php', '/var/www', '/home/david/documents/school/projects', '/home/david/documents/school',
+				'/', '/var', '/var/www/index.php', '/var/www', '/home/david/documents/school/projects', '/home/david/documents/school',
 				'/home/david/documents', '/home/david', '/home', '/home/john', '/home/john/passwords.txt'
 			])
 			expect(fs.statSync('/var/www/index.php').isFile()).to.be.true
@@ -66,7 +66,7 @@ describe 'fs', ->
 			fs.rename('/var/www', '/var/old_www', (err) ->
 				expect(err).to.not.exists
 				expect(fs.existsSync('/var/www')).to.be.false
-				expect(fs._data).to.have.keys(['/var', '/var/old_www'])
+				expect(fs._data).to.have.keys(['/', '/var', '/var/old_www'])
 				done()
 			)
 
@@ -517,7 +517,7 @@ describe 'fs', ->
 		it 'should remove file', (done) ->
 			fs.writeFileSync('/var/www/index.php', '')
 			fs.unlink('/var/www/index.php', ->
-				expect(fs._data).to.have.keys(['/var/www', '/var'])
+				expect(fs._data).to.have.keys(['/', '/var/www', '/var'])
 				done()
 			)
 
@@ -556,7 +556,7 @@ describe 'fs', ->
 		it 'should remove directory', (done) ->
 			fs.mkdirSync('/var/www')
 			fs.rmdir('/var/www', ->
-				expect(fs._data).to.have.keys(['/var'])
+				expect(fs._data).to.have.keys(['/', '/var'])
 				done()
 			)
 
@@ -578,7 +578,7 @@ describe 'fs', ->
 
 		it 'should create new directory', (done) ->
 			fs.mkdir('/var/www', ->
-				expect(fs._data).to.have.keys(['/var', '/var/www'])
+				expect(fs._data).to.have.keys(['/', '/var', '/var/www'])
 				done()
 			)
 
@@ -615,8 +615,8 @@ describe 'fs', ->
 			)
 			fs.readdir('/var/www', (err, files) ->
 				expect(files).to.be.eql([
-					'/var/www/index.php'
-					'/var/www/project'
+					'index.php'
+					'project'
 				])
 				expect(fs.statSync('/var/www/index.php').isFile()).to.be.true
 				expect(fs.statSync('/var/www/project').isDirectory()).to.be.true
@@ -937,7 +937,7 @@ describe 'fs', ->
 
 		it 'should create new file', (done) ->
 			fs.writeFile('/var/www/index.php', '', ->
-				expect(fs._data).to.have.keys(['/var/www/index.php', '/var/www', '/var'])
+				expect(fs._data).to.have.keys(['/', '/var/www/index.php', '/var/www', '/var'])
 				expect(fs.statSync('/var/www/index.php').isFile()).to.be.true
 				done()
 			)
