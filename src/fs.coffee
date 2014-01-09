@@ -659,7 +659,7 @@ class fs
 				slashes = match[1].match(/\//g)
 				slashes = if slashes == null then 0 else slashes.length
 				if slashes == 1
-					files.push(name)
+					files.push(match[1].substr(1))
 
 		return files
 

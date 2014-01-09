@@ -505,7 +505,7 @@
           '/home/david': {}
         });
         return fs.readdir('/var/www', function(err, files) {
-          expect(files).to.be.eql(['/var/www/index.php', '/var/www/project']);
+          expect(files).to.be.eql(['index.php', 'project']);
           expect(fs.statSync('/var/www/index.php').isFile()).to.be["true"];
           expect(fs.statSync('/var/www/project').isDirectory()).to.be["true"];
           return done();

@@ -615,8 +615,8 @@ describe 'fs', ->
 			)
 			fs.readdir('/var/www', (err, files) ->
 				expect(files).to.be.eql([
-					'/var/www/index.php'
-					'/var/www/project'
+					'index.php'
+					'project'
 				])
 				expect(fs.statSync('/var/www/index.php').isFile()).to.be.true
 				expect(fs.statSync('/var/www/project').isDirectory()).to.be.true
