@@ -259,6 +259,37 @@ describe 'fs', ->
 
 
 	#*******************************************************************************************************************
+	#										LSTAT
+	#*******************************************************************************************************************
+
+
+	describe '#lstat()', ->
+
+		it 'should return an error if path does not exists', (done) ->
+			fs.lstat('/var/www', (err) ->
+				expect(err).to.be.an.instanceof(Error)
+				expect(err.message).to.be.equal("File or directory '/var/www' does not exists.")
+				done()
+			)
+
+		it 'should return an error if path is not a symlink', (done) ->
+			fs.mkdirSync('/var/www')
+			fs.lstat('/var/www', (err) ->
+				expect(err).to.be.an.instanceof(Error)
+				expect(err.message).to.be.equal("Path '/var/www' is not a symbolic link.")
+				done()
+			)
+
+		it 'should return stats for symlink', (done) ->
+			fs.mkdirSync('/var/www')
+			fs.symlinkSync('/var/www', '/var/document_root')
+			fs.lstat('/var/document_root', (err, stats) ->
+				expect(stats.isSymbolicLink()).to.be.true
+				done()
+			)
+
+
+	#*******************************************************************************************************************
 	#										FSTAT
 	#*******************************************************************************************************************
 

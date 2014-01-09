@@ -383,12 +383,24 @@ class fs
 
 
 	lstat: (path, callback) ->
-		@lstatSync(path)
-		callback()
+		try
+			callback(null, @lstatSync(path))
+		catch err
+			callback(err, null)
 
 
 	lstatSync: (path) ->
-		Errors.notImplemented 'lstat'
+		path = @realpathSync(path)
+
+		if !@existsSync(path)
+			Error.notFound(path)
+
+		stats = @_data[path].stats
+
+		if !stats.isSymbolicLink()
+			Errors.notSymlink(path)
+
+		return stats
 
 
 	#*******************************************************************************************************************

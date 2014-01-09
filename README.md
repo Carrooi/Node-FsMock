@@ -26,7 +26,7 @@ Calling unsupported methods will throw an exception.
 * `fs.fchmod()`: yes
 * `fs.lchmod()`: no
 * `fs.stat()`: yes
-* `fs.lstat()`: no
+* `fs.lstat()`: yes
 * `fs.fstat()`: yes
 * `fs.link()`: yes
 * `fs.symlink()`: yes (type argument is ignored)

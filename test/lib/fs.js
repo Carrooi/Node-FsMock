@@ -241,6 +241,31 @@
         });
       });
     });
+    describe('#lstat()', function() {
+      it('should return an error if path does not exists', function(done) {
+        return fs.lstat('/var/www', function(err) {
+          expect(err).to.be.an["instanceof"](Error);
+          expect(err.message).to.be.equal("File or directory '/var/www' does not exists.");
+          return done();
+        });
+      });
+      it('should return an error if path is not a symlink', function(done) {
+        fs.mkdirSync('/var/www');
+        return fs.lstat('/var/www', function(err) {
+          expect(err).to.be.an["instanceof"](Error);
+          expect(err.message).to.be.equal("Path '/var/www' is not a symbolic link.");
+          return done();
+        });
+      });
+      return it('should return stats for symlink', function(done) {
+        fs.mkdirSync('/var/www');
+        fs.symlinkSync('/var/www', '/var/document_root');
+        return fs.lstat('/var/document_root', function(err, stats) {
+          expect(stats.isSymbolicLink()).to.be["true"];
+          return done();
+        });
+      });
+    });
     describe('#fstat()', function() {
       it('should return an error if descriptor does not exists', function(done) {
         return fs.fstat(1, function(err) {

@@ -25,6 +25,10 @@ class Errors
 		throw new Error "Path '#{path}' is not a directory."
 
 
+	@notSymlink: (path) ->
+		throw new Error "Path '#{path}' is not a symbolic link."
+
+
 	@directoryNotEmpty: (path) ->
 		throw new Error "Directory '#{path}' is not empty."
 
