@@ -104,7 +104,7 @@ class Stats extends EventEmitter
 
 
 	isSymbolicLink: ->
-		Errors.notImplemented 'isSymbolicLink'
+		return @_isSymlink
 
 
 	isFIFO: ->

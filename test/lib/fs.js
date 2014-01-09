@@ -262,6 +262,23 @@
         });
       });
     });
+    describe('#link()', function() {
+      it('should return an error if source path does not exists', function(done) {
+        return fs.link('/var/www/index.php', '/var/www/default.php', function(err) {
+          expect(err).to.be.an["instanceof"](Error);
+          expect(err.message).to.be.equal("File or directory '/var/www/index.php' does not exists.");
+          return done();
+        });
+      });
+      return it('should create link to file', function(done) {
+        fs.writeFileSync('/var/www/index.php', '');
+        return fs.link('/var/www/index.php', '/var/www/default.php', function() {
+          expect(fs.existsSync('/var/www/default.php')).to.be["true"];
+          expect(fs.statSync('/var/www/default.php')._isLink).to.be["true"];
+          return done();
+        });
+      });
+    });
     describe('#realpath()', function() {
       it('should return an error if path does not exists', function(done) {
         return fs.realpath('/var/www', function(err) {

@@ -59,20 +59,26 @@ class fs
 		if typeof info.encoding == 'undefined' then info.encoding = 'utf8'
 		if typeof info.source == 'undefined' then info.source = null
 
-		if typeof data == 'string'
+		if path[0] == '@'
+			type = 'link'
+			info = {source: data}
+			path = path.substr(1)
+
+		else if path[0] == '%'
+			type = 'symlink'
+			info = {source: data}
+			path = path.substr(1)
+
+		else if typeof data == 'string'
 			type = 'file'
+			info = {data: data}
+
 		else if Object.prototype.toString.call(data) == '[object Object]'
 			type = 'directory'
+			info = {paths: data}
 
-		switch type
-			when 'file'
-				info = {data: data}
-			when 'directory'
-				info = {paths: data}
-			when 'link', 'symlink'
-				info = {source: data}
-			else
-				throw new Error 'Unknown type'
+		else
+			throw new Error 'Unknown type'
 
 		path = _path.join('/', path)
 
@@ -106,6 +112,7 @@ class fs
 
 			when 'link'
 				stats._isLink = true
+				stats._isFile = true
 
 				item.source = info.source
 
@@ -391,12 +398,18 @@ class fs
 
 
 	link: (srcpath, dstpath, callback) ->
-		@linkSync(srcpath, dstpath)
-		callback()
+		try
+			@linkSync(srcpath, dstpath)
+			callback(null)
+		catch err
+			callback(err)
 
 
 	linkSync: (srcpath, dstpath) ->
-		Errors.notImplemented 'link'
+		if !@existsSync(srcpath)
+			Errors.notFound(srcpath)
+
+		@_addPath('@' + dstpath, srcpath)
 
 
 	#*******************************************************************************************************************

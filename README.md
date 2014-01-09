@@ -28,7 +28,7 @@ Calling unsupported methods will throw an exception.
 * `fs.stat()`: yes
 * `fs.lstat()`: no
 * `fs.fstat()`: yes
-* `fs.link()`: no
+* `fs.link()`: yes
 * `fs.symlink()`: no
 * `fs.readlink()`: no
 * `fs.realpath()`: yes
@@ -71,7 +71,7 @@ Calling unsupported methods will throw an exception.
 * `isDirectory()`: yes
 * `isBlockDevice()`: no
 * `isCharacterDevice()`: no
-* `isSymbolicLink()`: no
+* `isSymbolicLink()`: yes
 * `isFIFO()`: no
 * `isSocket()`: no
 

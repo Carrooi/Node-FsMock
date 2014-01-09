@@ -284,6 +284,29 @@ describe 'fs', ->
 
 
 	#*******************************************************************************************************************
+	#										LINK
+	#*******************************************************************************************************************
+
+
+	describe '#link()', ->
+
+		it 'should return an error if source path does not exists', (done) ->
+			fs.link('/var/www/index.php', '/var/www/default.php', (err) ->
+				expect(err).to.be.an.instanceof(Error)
+				expect(err.message).to.be.equal("File or directory '/var/www/index.php' does not exists.")
+				done()
+			)
+
+		it 'should create link to file', (done) ->
+			fs.writeFileSync('/var/www/index.php', '')
+			fs.link('/var/www/index.php', '/var/www/default.php', ->
+				expect(fs.existsSync('/var/www/default.php')).to.be.true
+				expect(fs.statSync('/var/www/default.php')._isLink).to.be.true
+				done()
+			)
+
+
+	#*******************************************************************************************************************
 	#										REALPATH
 	#*******************************************************************************************************************
 
