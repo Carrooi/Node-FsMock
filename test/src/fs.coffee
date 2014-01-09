@@ -203,6 +203,14 @@ describe 'fs', ->
 				done()
 			)
 
+		it 'should return an error if path is not symlink', (done) ->
+			fs.writeFileSync('/var/www/index.php', '')
+			fs.lchown('/var/www/index.php', 200, 200, (err) ->
+				expect(err).to.be.an.instanceof(Error)
+				expect(err.message).to.be.equal("Path '/var/www/index.php' is not a symbolic link.")
+				done()
+			)
+
 		it 'should change uid and gid of symlink', (done) ->
 			fs.writeFileSync('/var/www/index.php', '')
 			fs.symlinkSync('/var/www/index.php', '/var/www/default.php')
@@ -271,6 +279,14 @@ describe 'fs', ->
 			fs.lchmod('/var/www', 777, (err) ->
 				expect(err).to.be.an.instanceof(Error)
 				expect(err.message).to.be.equal("File or directory '/var/www' does not exists.")
+				done()
+			)
+
+		it 'should return an error if path is not symlink', (done) ->
+			fs.mkdirSync('/var/www')
+			fs.lchmod('/var/www', 777, (err) ->
+				expect(err).to.be.an.instanceof(Error)
+				expect(err.message).to.be.equal("Path '/var/www' is not a symbolic link.")
 				done()
 			)
 

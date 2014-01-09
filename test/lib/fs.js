@@ -192,6 +192,14 @@
           return done();
         });
       });
+      it('should return an error if path is not symlink', function(done) {
+        fs.writeFileSync('/var/www/index.php', '');
+        return fs.lchown('/var/www/index.php', 200, 200, function(err) {
+          expect(err).to.be.an["instanceof"](Error);
+          expect(err.message).to.be.equal("Path '/var/www/index.php' is not a symbolic link.");
+          return done();
+        });
+      });
       return it('should change uid and gid of symlink', function(done) {
         fs.writeFileSync('/var/www/index.php', '');
         fs.symlinkSync('/var/www/index.php', '/var/www/default.php');
@@ -247,6 +255,14 @@
         return fs.lchmod('/var/www', 777, function(err) {
           expect(err).to.be.an["instanceof"](Error);
           expect(err.message).to.be.equal("File or directory '/var/www' does not exists.");
+          return done();
+        });
+      });
+      it('should return an error if path is not symlink', function(done) {
+        fs.mkdirSync('/var/www');
+        return fs.lchmod('/var/www', 777, function(err) {
+          expect(err).to.be.an["instanceof"](Error);
+          expect(err.message).to.be.equal("Path '/var/www' is not a symbolic link.");
           return done();
         });
       });

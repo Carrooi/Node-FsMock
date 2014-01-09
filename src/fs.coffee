@@ -306,6 +306,9 @@ class fs
 		if !@existsSync(path)
 			Errors.notFound(path)
 
+		if !@lstatSync(path).isSymbolicLink()
+			Errors.notSymlink(path)
+
 		@_setAttributes(path,
 			uid: uid
 			gid: gid
@@ -371,6 +374,9 @@ class fs
 
 		if !@existsSync(path)
 			Errors.notFound(path)
+
+		if !@lstatSync(path).isSymbolicLink()
+			Errors.notSymlink(path)
 
 		@_setAttributes(path,
 			mode: mode
