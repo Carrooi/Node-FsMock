@@ -10,6 +10,11 @@ $ npm install fs-mock
 
 ## Usage
 
+**This module does not change original fs module in any way.**
+
+If you want to pass this module into other module, you will have to use for example [rewire](https://github.com/jhnns/rewire)
+package.
+
 ```
 var FS = require('fs-mock');
 var fs = new FS({
@@ -19,7 +24,7 @@ var fs = new FS({
 	'home': {
 		'david': {},
 		'john': {
-			'password.txt': 'my super password'		// file
+			'password.txt': 'my super password'			// file
 		}
 	}
 });
@@ -36,7 +41,7 @@ There are also all *Sync methods.
 
 Calling unsupported methods will throw an exception.
 
-### Fs object
+### Fs object:
 
 * `fs.rename()`: yes
 * `fs.ftruncate()`: yes
@@ -74,7 +79,7 @@ Calling unsupported methods will throw an exception.
 * `fs.createReadStream()`: yes
 * `fs.createWriteStream()`: yes
 
-### Stats:
+### Stats object:
 
 * `dev`: no
 * `ino`: no
