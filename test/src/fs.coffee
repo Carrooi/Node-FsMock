@@ -20,18 +20,13 @@ describe 'fs', ->
 
 		it 'should parse input data', ->
 			fs._setTree(
-				'/var >>':
-					stats:
-						atime: new Date
-				'/var/www/index.php': {}
-				'/home/david/documents/school/projects >>': {}
-				'/home >>':
-					stats: mtime: new Date
-					paths:
-						'david >>': {}
-						'john >>':
-							paths:
-								'passwords.txt': {}
+				'var': {}
+				'var/www/index.php': ''
+				'home/david/documents/school/projects': {}
+				'home':
+					'david': {}
+					'john':
+						'passwords.txt': ''
 			)
 			expect(fs._data).to.have.keys([
 				'/var', '/var/www/index.php', '/var/www', '/home/david/documents/school/projects', '/home/david/documents/school',
@@ -58,7 +53,7 @@ describe 'fs', ->
 			)
 
 		it 'should return an error if path with new name already exists', (done) ->
-			fs._setTree('/var/www >>': {}, '/var/old_www >>': {})
+			fs._setTree('/var/www': {}, '/var/old_www': {})
 			fs.rename('/var/www', '/var/old_www', (err) ->
 				expect(err).to.be.an.instanceof(Error)
 				expect(err.message).to.be.equal("File or directory '/var/old_www' already exists.")
@@ -66,7 +61,7 @@ describe 'fs', ->
 			)
 
 		it 'should rename path', (done) ->
-			fs._setTree('/var/www >>': {})
+			fs._setTree('var/www': {})
 			fs.rename('/var/www', '/var/old_www', (err) ->
 				expect(err).to.not.exists
 				expect(fs.existsSync('/var/www')).to.be.false
@@ -90,7 +85,7 @@ describe 'fs', ->
 			)
 
 		it 'should return an error if file is not opened for writening', (done) ->
-			fs._setTree('/var/www/index.php': {})
+			fs._setTree('/var/www/index.php': '')
 			fd = fs.openSync('/var/www/index.php', 'r')
 			fs.ftruncate(fd, 10, (err) ->
 				expect(err).to.be.an.instanceof(Error)
@@ -99,7 +94,7 @@ describe 'fs', ->
 			)
 
 		it 'should truncate file data', (done) ->
-			fs._setTree('/var/www/index.php': {data: 'hello word'})
+			fs._setTree('/var/www/index.php': 'hello word')
 			fd = fs.openSync('/var/www/index.php', 'w+')
 			fs.ftruncate(fd, 5, ->
 				expect(fs.readFileSync('/var/www/index.php', encoding: 'utf8')).to.be.equal('hello')
@@ -122,7 +117,7 @@ describe 'fs', ->
 			)
 
 		it 'should return an error if path is not file', (done) ->
-			fs._setTree('/var/www >>': {})
+			fs._setTree('/var/www': {})
 			fs.truncate('/var/www', 10, (err) ->
 				expect(err).to.be.an.instanceof(Error)
 				expect(err.message).to.be.equal("Path '/var/www' is not a file.")
@@ -130,14 +125,14 @@ describe 'fs', ->
 			)
 
 		it 'should leave file data if needed length is larger than data length', (done) ->
-			fs._setTree('/var/www/index.php': {data: 'hello word'})
+			fs._setTree('/var/www/index.php': 'hello word')
 			fs.truncate('/var/www/index.php', 15, ->
 				expect(fs.readFileSync('/var/www/index.php', encoding: 'utf8')).to.be.equal('hello word')
 				done()
 			)
 
 		it 'should truncate file data', (done) ->
-			fs._setTree('/var/www/index.php': {data: 'hello word'})
+			fs._setTree('/var/www/index.php': 'hello word')
 			fs.truncate('/var/www/index.php', 5, ->
 				expect(fs.readFileSync('/var/www/index.php', encoding: 'utf8')).to.be.equal('hello')
 				done()
@@ -159,7 +154,7 @@ describe 'fs', ->
 			)
 
 		it 'should change uid and gid', (done) ->
-			fs._setTree('/var/www >>': {})
+			fs._setTree('/var/www': {})
 			fs.chown('/var/www', 300, 200, ->
 				stats = fs.statSync('/var/www')
 				expect(stats.uid).to.be.equal(300)
@@ -183,7 +178,7 @@ describe 'fs', ->
 			)
 
 		it 'should change uid and  gid', (done) ->
-			fs._setTree('/var/www >>': {})
+			fs._setTree('/var/www': {})
 			fs.open('/var/www', 'r', (err, fd) ->
 				fs.fchown(fd, 300, 400, ->
 					stats = fs.fstatSync(fd)
@@ -209,7 +204,7 @@ describe 'fs', ->
 			)
 
 		it 'should change mode', (done) ->
-			fs._setTree('/var/www >>': {})
+			fs._setTree('/var/www': {})
 			fs.chmod('/var/www', 777, ->
 				expect(fs.statSync('/var/www').mode).to.be.equal(777)
 				done()
@@ -231,7 +226,7 @@ describe 'fs', ->
 			)
 
 		it 'should change mode', (done) ->
-			fs._setTree('/var/www/index.php': {})
+			fs._setTree('/var/www/index.php': '')
 			fs.open('/var/www/index.php', 'r', (err, fd) ->
 				fs.fchmod(fd, 777, ->
 					expect(fs.fstatSync(fd).mode).to.be.equal(777)
@@ -255,7 +250,7 @@ describe 'fs', ->
 			)
 
 		it 'should return stats object for path', (done) ->
-			fs._setTree('/var/www/index.php': {})
+			fs._setTree('/var/www/index.php': '')
 			fs.stat('/var/www/index.php', (err, stats) ->
 				expect(stats).to.be.an.instanceof(Stats)
 				expect(stats.isFile()).to.be.true
@@ -278,7 +273,7 @@ describe 'fs', ->
 			)
 
 		it 'should return stat object', (done) ->
-			fs._setTree('/var/www/index.php': {})
+			fs._setTree('/var/www/index.php': '')
 			fs.open('/var/www/index.php', 'r', (err, fd) ->
 				fs.fstat(fd, (err, stats) ->
 					expect(stats).to.be.an.instanceof(Stats)
@@ -309,7 +304,7 @@ describe 'fs', ->
 			)
 
 		it 'should return resolved realpath', (done) ->
-			fs._setTree('/var/www/index.php': {})
+			fs._setTree('/var/www/index.php': '')
 			fs.realpath('/var/www/data/../../www/index.php', (err, resolvedPath) ->
 				expect(resolvedPath).to.be.equal('/var/www/index.php')
 				done()
@@ -331,7 +326,7 @@ describe 'fs', ->
 			)
 
 		it 'should return an error if path is not file', (done) ->
-			fs._setTree('/var/www >>': {})
+			fs._setTree('/var/www': {})
 			fs.unlink('/var/www', (err) ->
 				expect(err).to.be.an.instanceof(Error)
 				expect(err.message).to.be.equal("Path '/var/www' is not a file.")
@@ -339,7 +334,7 @@ describe 'fs', ->
 			)
 
 		it 'should remove file', (done) ->
-			fs._setTree('/var/www/index.php': {})
+			fs._setTree('/var/www/index.php': '')
 			fs.unlink('/var/www/index.php', ->
 				expect(fs._data).to.have.keys([
 					'/var/www',
@@ -364,7 +359,7 @@ describe 'fs', ->
 			)
 
 		it 'should return an error if path is not directory', (done) ->
-			fs._setTree('/var/www/index.php': {})
+			fs._setTree('/var/www/index.php': '')
 			fs.rmdir('/var/www/index.php', (err) ->
 				expect(err).to.be.an.instanceof(Error)
 				expect(err.message).to.be.equal("Path '/var/www/index.php' is not a directory.")
@@ -372,7 +367,7 @@ describe 'fs', ->
 			)
 
 		it 'should return an error if directory is not empty', (done) ->
-			fs._setTree('/var/www >>': {}, '/var/www/index.php': {})
+			fs._setTree('/var/www': {}, '/var/www/index.php': '')
 			fs.rmdir('/var/www', (err) ->
 				expect(err).to.be.an.instanceof(Error)
 				expect(err.message).to.be.equal("Directory '/var/www' is not empty.")
@@ -380,7 +375,7 @@ describe 'fs', ->
 			)
 
 		it 'should remove directory', (done) ->
-			fs._setTree('/var/www >>': {})
+			fs._setTree('/var/www': {})
 			fs.rmdir('/var/www', ->
 				expect(fs._data).to.have.keys(['/var'])
 				done()
@@ -424,7 +419,7 @@ describe 'fs', ->
 			)
 
 		it 'should throw an error if path is not directory', (done) ->
-			fs._setTree('/var/www/index.php': {})
+			fs._setTree('/var/www/index.php': '')
 			fs.readdir('/var/www/index.php', (err) ->
 				expect(err).to.be.an.instanceof(Error)
 				expect(err.message).to.be.equal("Path '/var/www/index.php' is not a directory.")
@@ -433,13 +428,11 @@ describe 'fs', ->
 
 		it 'should load all files and directories from directory', (done) ->
 			fs._setTree(
-				'/var/www >>':
-					paths:
-						'index.php': {}
-						'project >>':
-							paths:
-								'school >>': {}
-				'/home/david >>': {}
+				'/var/www':
+					'index.php': ''
+					'project':
+						'school': {}
+				'/home/david': {}
 			)
 			fs.readdir('/var/www', (err, files) ->
 				expect(files).to.be.eql([
@@ -467,7 +460,7 @@ describe 'fs', ->
 			)
 
 		it 'should close opened file', (done) ->
-			fs._setTree('/var/www/index.php': {})
+			fs._setTree('/var/www/index.php': '')
 			fd = fs.openSync('/var/www/index.php', 'r')
 			fs.close(fd, ->
 				expect(fs._fileDescriptors).to.be.eql([])
@@ -497,7 +490,7 @@ describe 'fs', ->
 			)
 
 		it 'should return an error if file already exists (flag: wx)', (done) ->
-			fs._setTree('/var/www/index.php': {})
+			fs._setTree('/var/www/index.php': '')
 			fs.open('/var/www/index.php', 'wx', (err) ->
 				expect(err).to.be.an.instanceof(Error)
 				expect(err.message).to.be.equal("File or directory '/var/www/index.php' already exists.")
@@ -505,7 +498,7 @@ describe 'fs', ->
 			)
 
 		it 'should return an error if file already exists (flag: wx+)', (done) ->
-			fs._setTree('/var/www/index.php': {})
+			fs._setTree('/var/www/index.php': '')
 			fs.open('/var/www/index.php', 'wx+', (err) ->
 				expect(err).to.be.an.instanceof(Error)
 				expect(err.message).to.be.equal("File or directory '/var/www/index.php' already exists.")
@@ -513,7 +506,7 @@ describe 'fs', ->
 			)
 
 		it 'should return an error if file already exists (flag: ax)', (done) ->
-			fs._setTree('/var/www/index.php': {})
+			fs._setTree('/var/www/index.php': '')
 			fs.open('/var/www/index.php', 'ax', (err) ->
 				expect(err).to.be.an.instanceof(Error)
 				expect(err.message).to.be.equal("File or directory '/var/www/index.php' already exists.")
@@ -521,7 +514,7 @@ describe 'fs', ->
 			)
 
 		it 'should return an error if file already exists (flag: ax+)', (done) ->
-			fs._setTree('/var/www/index.php': {})
+			fs._setTree('/var/www/index.php': '')
 			fs.open('/var/www/index.php', 'ax+', (err) ->
 				expect(err).to.be.an.instanceof(Error)
 				expect(err.message).to.be.equal("File or directory '/var/www/index.php' already exists.")
@@ -561,7 +554,7 @@ describe 'fs', ->
 	describe '#utimes()', ->
 
 		it 'shoul change atime and mtime', (done) ->
-			fs._setTree('/var/www/index.php': {})
+			fs._setTree('/var/www/index.php': '')
 			atime = fs.statSync('/var/www/index.php').atime
 			mtime = fs.statSync('/var/www/index.php').mtime
 
@@ -589,7 +582,7 @@ describe 'fs', ->
 			)
 
 		it 'should change atime and mtime', (done) ->
-			fs._setTree('/var/www >>': {})
+			fs._setTree('/var/www': {})
 
 			fs.open('/var/www', 'r', (err, fd) ->
 				atime = fs.fstatSync(fd).atime
@@ -635,7 +628,7 @@ describe 'fs', ->
 			)
 
 		it 'should return an error if file is not open for writing', (done) ->
-			fs._setTree('/var/www/index.php': {})
+			fs._setTree('/var/www/index.php': '')
 			fs.open('/var/www/index.php', 'r', (err, fd) ->
 				fs.write(fd, new Buffer(''), 0, 0, 0, (err) ->
 					expect(err).to.be.an.instanceof(Error)
@@ -645,7 +638,7 @@ describe 'fs', ->
 			)
 
 		it 'should write data to file', (done) ->
-			fs._setTree('/var/www/index.php': {data: 'hello word'})
+			fs._setTree('/var/www/index.php': 'hello word')
 			fs.open('/var/www/index.php', 'w', (err, fd) ->
 				fs.write(fd, new Buffer('hello'), 0, 5, null, ->
 					expect(fs.readFileSync('/var/www/index.php', encoding: 'utf8')).to.be.equal('hello')
@@ -654,7 +647,7 @@ describe 'fs', ->
 			)
 
 		it 'should write data to exact position in file', (done) ->
-			fs._setTree('/var/www/index.php': {data: 'helloword'})
+			fs._setTree('/var/www/index.php': 'helloword')
 			fs.open('/var/www/index.php', 'w', (err, fd) ->
 				fs.write(fd, new Buffer(' '), 0, 1, 5, ->
 					expect(fs.readFileSync('/var/www/index.php', encoding: 'utf8')).to.be.equal('hello word')
@@ -678,7 +671,7 @@ describe 'fs', ->
 			)
 
 		it 'should return an error if file is not open for reading', (done) ->
-			fs._setTree('/var/www/index.php': {})
+			fs._setTree('/var/www/index.php': '')
 			fs.open('/var/www/index.php', 'w', (err, fd) ->
 				fs.read(fd, new Buffer(1), 0, 1, null, (err) ->
 					expect(err).to.be.an.instanceof(Error)
@@ -688,7 +681,7 @@ describe 'fs', ->
 			)
 
 		it 'should read all data', (done) ->
-			fs._setTree('/var/www/index.php': {data: 'hello word'})
+			fs._setTree('/var/www/index.php': 'hello word')
 			fs.open('/var/www/index.php', 'r', (err, fd) ->
 				size = fs.fstatSync(fd).size
 				buffer = new Buffer(size)
@@ -701,7 +694,7 @@ describe 'fs', ->
 			)
 
 		it 'should read all data byte by byte', (done) ->
-			fs._setTree('/var/www/index.php': {data: 'hello word'})
+			fs._setTree('/var/www/index.php': 'hello word')
 			fs.open('/var/www/index.php', 'r', (err, fd) ->
 				size = fs.fstatSync(fd).size
 				buffer = new Buffer(size)
@@ -731,7 +724,7 @@ describe 'fs', ->
 			)
 
 		it 'should throw an error if path is not file', (done) ->
-			fs._setTree('/var/www >>': {})
+			fs._setTree('/var/www': {})
 			fs.readFile('/var/www', (err) ->
 				expect(err).to.be.an.instanceof(Error)
 				expect(err.message).to.be.equal("Path '/var/www' is not a file.")
@@ -740,7 +733,7 @@ describe 'fs', ->
 
 		it 'should read data from file as buffer', (done) ->
 			s = '<?php echo "hello";'
-			fs._setTree('/var/www/index.php': {data: s})
+			fs._setTree('/var/www/index.php': s)
 			fs.readFile('/var/www/index.php', (err, data) ->
 				expect(data).to.be.an.instanceof(Buffer)
 				expect(data.toString('utf8')).to.be.equal(s)
@@ -749,7 +742,7 @@ describe 'fs', ->
 
 		it 'should read data from file as string', (done) ->
 			s = '<?php echo "hello";'
-			fs._setTree('/var/www/index.php': {data: s})
+			fs._setTree('/var/www/index.php': s)
 			fs.readFile('/var/www/index.php', encoding: 'utf8', (err, data) ->
 				expect(data).to.be.equal(s)
 				done()
@@ -771,7 +764,7 @@ describe 'fs', ->
 			)
 
 		it 'should rewrite old file', (done) ->
-			fs._setTree('/var/www/index.php': {data: 'old'})
+			fs._setTree('/var/www/index.php': 'old')
 			fs.writeFile('/var/www/index.php', 'new', ->
 				expect(fs.readFileSync('/var/www/index.php', encoding: 'utf8')).to.be.equal('new')
 				done()
@@ -786,7 +779,7 @@ describe 'fs', ->
 	describe '#appendFile()', ->
 
 		it 'should return an error if path is not file', (done) ->
-			fs._setTree('/var/www >>': {})
+			fs._setTree('/var/www': {})
 			fs.appendFile('/var/www', '', (err) ->
 				expect(err).to.be.an.instanceof(Error)
 				expect(err.message).to.be.equal("Path '/var/www' is not a file.")
@@ -800,7 +793,7 @@ describe 'fs', ->
 			)
 
 		it 'should append data to file with buffer', (done) ->
-			fs._setTree('/var/www/index.php': {data: 'one'})
+			fs._setTree('/var/www/index.php': 'one')
 			fs.appendFile('/var/www/index.php', new Buffer(', two'), ->
 				expect(fs.readFileSync('/var/www/index.php', encoding: 'utf8')).to.be.equal('one, two')
 				done()
@@ -818,7 +811,7 @@ describe 'fs', ->
 			expect( -> fs.watch('/var/www')).to.throw(Error, "File or directory '/var/www' does not exists.")
 
 		it 'should call listener when attributes were changed', (done) ->
-			fs._setTree('/var/www/index.php': {})
+			fs._setTree('/var/www/index.php': '')
 			fs.watch('/var/www/index.php', (event, filename) ->
 				expect(event).to.be.equal('change')
 				expect(filename).to.be.equal('/var/www/index.php')
@@ -827,7 +820,7 @@ describe 'fs', ->
 			fs.utimesSync('/var/www/index.php', new Date, new Date)
 
 		it 'should call listener when file was renamed', (done) ->
-			fs._setTree('/var/www/index.php': {})
+			fs._setTree('/var/www/index.php': '')
 			fs.watch('/var/www/index.php', (event, filename) ->
 				expect(event).to.be.equal('rename')
 				expect(filename).to.be.equal('/var/www/default.php')
@@ -836,7 +829,7 @@ describe 'fs', ->
 			fs.renameSync('/var/www/index.php', '/var/www/default.php')
 
 		it 'should call listener when data was changed', (done) ->
-			fs._setTree('/var/www/index.php': {})
+			fs._setTree('/var/www/index.php': '')
 			fs.watch('/var/www/index.php', (event, filename) ->
 				expect(event).to.be.equal('change')
 				expect(filename).to.be.equal('/var/www/index.php')
@@ -846,7 +839,7 @@ describe 'fs', ->
 			fs.writeFileSync('/var/www/index.php', 'hello word')
 
 		it 'should close watching', (done) ->
-			fs._setTree('/var/www/index.php': {})
+			fs._setTree('/var/www/index.php': '')
 			called = false
 			watcher = fs.watch('/var/www/index.php', (event, filename) ->
 				called = true
@@ -873,7 +866,7 @@ describe 'fs', ->
 			)
 
 		it 'should return true when file exists', (done) ->
-			fs._setTree('/var/www/index.php': {})
+			fs._setTree('/var/www/index.php': '')
 			fs.exists('/var/www/index.php', (exists) ->
 				expect(exists).to.be.true
 				done()
@@ -891,7 +884,7 @@ describe 'fs', ->
 			expect( -> fs.createReadStream('/var/www/index.php') ).to.throw(Error, "File or directory '/var/www/index.php' does not exists.")
 
 		it 'should create readable stream', (done) ->
-			fs._setTree('/var/www/index.php': {data: 'hello word'})
+			fs._setTree('/var/www/index.php': 'hello word')
 			rs = fs.createReadStream('/var/www/index.php').on 'readable', ->
 				buf = rs.read()
 				if buf != null
@@ -900,7 +893,7 @@ describe 'fs', ->
 					done()
 
 		it 'should create readable stream with start and end', (done) ->
-			fs._setTree('/var/www/index.php': {data: 'hello word'})
+			fs._setTree('/var/www/index.php': 'hello word')
 			rs = fs.createReadStream('/var/www/index.php', start: 6, end: 10).on 'readable', ->
 				buf = rs.read()
 				if buf != null
@@ -920,7 +913,7 @@ describe 'fs', ->
 			expect( -> fs.createReadStream('/var/www/index.php') ).to.throw(Error, "File or directory '/var/www/index.php' does not exists.")
 
 		it 'should create writable stream', (done) ->
-			fs._setTree('/var/www/index.php': {data: ''})
+			fs._setTree('/var/www/index.php': '')
 			ws = fs.createWriteStream('/var/www/index.php')
 			ws.on 'finish', ->
 				expect(fs.readFileSync('/var/www/index.php', encoding: 'utf8')).to.be.equal('hello word')

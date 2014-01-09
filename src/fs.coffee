@@ -30,11 +30,11 @@ class fs
 	_fileDescriptorsCounter: 0
 
 
-	constructor: (tree = {}) ->
+	constructor: (tree = {}, info = {}) ->
 		@_data = {}
 		@_fileDescriptors = []
 
-		@_setTree(tree)
+		@_setTree(tree, info)
 
 
 	_hasFd: (fd) ->
@@ -53,21 +53,31 @@ class fs
 		@_data[path].stats._setAttributes(attributes)
 
 
-	_addPath: (path, data = {}, type = null) ->
-		if typeof data.stats == 'undefined' then data.stats = {}
-		if typeof data.mode == 'undefined' then data.mode = 777
-		if typeof data.encoding == 'undefined' then data.encoding = 'utf8'
-		if typeof data.source == 'undefined' then data.source = null
+	_addPath: (path, data = '', info = {}) ->
+		if typeof info.stats == 'undefined' then info.stats = {}
+		if typeof info.mode == 'undefined' then info.mode = 777
+		if typeof info.encoding == 'undefined' then info.encoding = 'utf8'
+		if typeof info.source == 'undefined' then info.source = null
 
-		if type == null
-			if path.match(/\s>>$/) != null
-				path = path.substring(0, path.length - 3)
-				type = 'directory'
+		if typeof data == 'string'
+			type = 'file'
+		else if Object.prototype.toString.call(data) == '[object Object]'
+			type = 'directory'
+
+		switch type
+			when 'file'
+				info = {data: data}
+			when 'directory'
+				info = {paths: data}
+			when 'link', 'symlink'
+				info = {source: data}
 			else
-				type = 'file'
+				throw new Error 'Unknown type'
 
-		stats = new Stats(path, data.stats)
-		stats.mode = data.mode
+		path = _path.join('/', path)
+
+		stats = new Stats(path, info.stats)
+		stats.mode = info.mode
 
 		@_data[path] = {}
 
@@ -78,19 +88,19 @@ class fs
 			when 'directory'
 				stats._isDirectory = true
 
-				if typeof data.paths != 'undefined'
-					for subPath, subData of data.paths
-						@_addPath(path + '/' + subPath, subData)
+				if typeof info.paths != 'undefined'
+					for subPath, subData of info.paths
+						@_addPath(_path.join(path, subPath), subData)
 
 			when 'file'
 				stats._isFile = true
 
-				if typeof data.data == 'undefined'
-					item.data = new Buffer('', data.encoding)
-				else if data.data instanceof Buffer
-					item.data = data.data
+				if typeof info.data == 'undefined'
+					item.data = new Buffer('', info.encoding)
+				else if info.data instanceof Buffer
+					item.data = info.data
 				else
-					item.data = new Buffer(data.data, data.encoding)
+					item.data = new Buffer(info.data, info.encoding)
 
 				stats.blksize = stats.size = item.data.length
 
@@ -119,14 +129,17 @@ class fs
 				if position > 0
 					sub = sub.substring(0, sub.lastIndexOf('/'))
 					if typeof @_data[sub] == 'undefined'
-						@_addPath(sub + ' >>')
+						@_addPath(sub, {})
 				else
 					sub = null
 
 
-	_setTree: (tree) ->
+	_setTree: (tree, info = {}) ->
 		for path, data of tree
 			@_addPath(path, data)
+
+		for path, attributes of info
+			@_setAttributes(path, attributes)
 
 		@_expandPaths()
 
@@ -515,7 +528,7 @@ class fs
 		if @existsSync(path)
 			Errors.alreadyExists(path)
 
-		@_addPath(path, mode: mode, 'directory')
+		@_addPath(path, {}, mode: mode)
 		@_expandPath(path)
 
 
@@ -598,7 +611,7 @@ class fs
 			flags: flags
 
 		if isCreatable(flags) && !exists
-			@_addPath(path, mode: mode, 'file')
+			@_addPath(path, '', mode: mode)
 
 		@_fileDescriptorsCounter++
 		return @_fileDescriptorsCounter - 1
