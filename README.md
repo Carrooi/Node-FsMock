@@ -8,9 +8,31 @@ Mock for fs module
 $ npm install fs-mock
 ```
 
+## Usage
+
+```
+var FS = require('fs-mock');
+var fs = new FS({
+	'var': {},											// empty directory
+	'var/www/index.php': '',							// empty file in /var/www, so directory var is now not empty
+	'home/david/documents/school/projects': {},
+	'home': {
+		'david': {},
+		'john': {
+			'password.txt': 'my super password'		// file
+		}
+	}
+});
+
+var myPassword = fs.readFileSync('/home/john/password.txt', {encoding: 'utf8'});		// my super password
+```
+
+If you write some path like this: `home/david/documents/school/projects`, it will be automatically expanded and all its
+parent directories will be also added to mocked file system.
+
 ## Supported functions
 
-When async function is supported, there is also it's sync version.
+There are also all *Sync methods.
 
 Calling unsupported methods will throw an exception.
 
