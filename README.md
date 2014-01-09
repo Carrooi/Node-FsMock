@@ -114,5 +114,8 @@ $ npm test
 
 ## Changelog
 
+* 1.0.1
+	+ Bug with root directories and readdir method
+
 * 1.0.0
 	+ First version
