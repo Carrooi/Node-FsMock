@@ -655,7 +655,7 @@ class fs
 		files = []
 
 		for name, data of @_data
-			if name != path && (match = name.match(new RegExp('^' + path + '(.+)$'))) != null
+			if name != path && name != '/' && (match = name.match(new RegExp('^' + path + '(.+)$'))) != null
 				slashes = match[1].match(/\//g)
 				slashes = if slashes == null then 0 else slashes.length
 				if slashes == 1
