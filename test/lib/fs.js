@@ -296,6 +296,40 @@
         });
       });
     });
+    describe('#readlink()', function() {
+      it('should return an error if source path does not exists', function(done) {
+        return fs.readlink('/var/www/default.php', function(err) {
+          expect(err).to.be.an["instanceof"](Error);
+          expect(err.message).to.be.equal("File or directory '/var/www/default.php' does not exists.");
+          return done();
+        });
+      });
+      it('should get path to source file of hard link', function(done) {
+        fs.writeFileSync('/var/www/index.php', '');
+        return fs.link('/var/www/index.php', '/var/www/default.php', function() {
+          return fs.readlink('/var/www/../../var/www/something/../default.php', function(err, path) {
+            expect(path).to.be.equal('/var/www/index.php');
+            return done();
+          });
+        });
+      });
+      it('should get path to source file of symlink', function(done) {
+        fs.writeFileSync('/var/www/index.php', '');
+        return fs.symlink('/var/www/index.php', '/var/www/default.php', function() {
+          return fs.readlink('/var/www/../../var/www/something/../default.php', function(err, path) {
+            expect(path).to.be.equal('/var/www/index.php');
+            return done();
+          });
+        });
+      });
+      return it('should get normalized path to file if it is not link', function(done) {
+        fs.writeFileSync('/var/www/index.php', '');
+        return fs.readlink('/var/www/../../var/www/something/../index.php', function(err, path) {
+          expect(path).to.be.equal('/var/www/index.php');
+          return done();
+        });
+      });
+    });
     describe('#realpath()', function() {
       it('should return an error if path does not exists', function(done) {
         return fs.realpath('/var/www', function(err) {

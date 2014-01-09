@@ -442,12 +442,23 @@ class fs
 
 
 	readlink: (path, callback) ->
-		@readlinkSync(path)
-		callback()
+		try
+			callback(null, @readlinkSync(path))
+		catch err
+			callback(err, null)
 
 
 	readlinkSync: (path) ->
-		Errors.notImplemented 'readlink'
+		path = @realpathSync(path)
+
+		if !@existsSync(path)
+			Errors.notFound(path)
+
+		stats = @statSync(path)
+		if stats._isLink || stats.isSymbolicLink()
+			return @_data[path].source
+
+		return path
 
 
 	#*******************************************************************************************************************

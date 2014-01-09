@@ -330,6 +330,46 @@ describe 'fs', ->
 
 
 	#*******************************************************************************************************************
+	#										READLINK
+	#*******************************************************************************************************************
+
+
+	describe '#readlink()', ->
+
+		it 'should return an error if source path does not exists', (done) ->
+			fs.readlink('/var/www/default.php', (err) ->
+				expect(err).to.be.an.instanceof(Error)
+				expect(err.message).to.be.equal("File or directory '/var/www/default.php' does not exists.")
+				done()
+			)
+
+		it 'should get path to source file of hard link', (done) ->
+			fs.writeFileSync('/var/www/index.php', '')
+			fs.link('/var/www/index.php', '/var/www/default.php', ->
+				fs.readlink('/var/www/../../var/www/something/../default.php', (err, path) ->
+					expect(path).to.be.equal('/var/www/index.php')
+					done()
+				)
+			)
+
+		it 'should get path to source file of symlink', (done) ->
+			fs.writeFileSync('/var/www/index.php', '')
+			fs.symlink('/var/www/index.php', '/var/www/default.php', ->
+				fs.readlink('/var/www/../../var/www/something/../default.php', (err, path) ->
+					expect(path).to.be.equal('/var/www/index.php')
+					done()
+				)
+			)
+
+		it 'should get normalized path to file if it is not link', (done) ->
+			fs.writeFileSync('/var/www/index.php', '')
+			fs.readlink('/var/www/../../var/www/something/../index.php', (err, path) ->
+				expect(path).to.be.equal('/var/www/index.php')
+				done()
+			)
+
+
+	#*******************************************************************************************************************
 	#										REALPATH
 	#*******************************************************************************************************************
 

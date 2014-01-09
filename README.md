@@ -30,7 +30,7 @@ Calling unsupported methods will throw an exception.
 * `fs.fstat()`: yes
 * `fs.link()`: yes
 * `fs.symlink()`: yes (type argument is ignored)
-* `fs.readlink()`: no
+* `fs.readlink()`: yes
 * `fs.realpath()`: yes
 * `fs.unlink()`: yes
 * `fs.rmdir()`: yes
