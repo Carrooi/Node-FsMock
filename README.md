@@ -2,6 +2,8 @@
 [![Dependency Status](https://gemnasium.com/sakren/node-fs-mock.png)](https://gemnasium.com/sakren/node-fs-mock)
 [![Build Status](https://travis-ci.org/sakren/node-fs-mock.png?branch=master)](https://travis-ci.org/sakren/node-fs-mock)
 
+[![Donate](http://b.repl.ca/v1/donate-PayPal-brightgreen.png)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=89MDP3DHWXYPW)
+
 # fs-mock
 
 Mock for fs module
