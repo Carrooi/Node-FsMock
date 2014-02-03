@@ -1,7 +1,7 @@
 {
 	"name": "fs-mock",
-	"description": "Simple fs mock",
-	"version": "1.0.1",
+	"description": "Simple fs mock with posix and windows file system styles",
+	"version": "1.1.0",
 	"author": {
 		"name": "David Kudera",
 		"email": "sakren@gmail.com"
@@ -9,6 +9,9 @@
 	"keywords": [
 		"fs",
 		"file system",
+		"posix",
+		"linux",
+		"windows",
 		"testing",
 		"mock"
 	],
