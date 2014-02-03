@@ -4,10 +4,10 @@ expect = require('chai').expect
 
 fs = null
 
-describe 'fs', ->
+describe 'fs.windows', ->
 
 	beforeEach( ->
-		fs = new FS
+		fs = new FS({}, windows: true)
 	)
 
 
@@ -20,22 +20,65 @@ describe 'fs', ->
 
 		it 'should parse input data', ->
 			fs = new FS(
-				'var': {}
-				'var/www/index.php': ''
-				'home/david/documents/school/projects': {}
-				'home':
+				'xampp': {}
+				'xampp\\htdocs\\index.php': ''
+				'Users\\david\\documents\\school\\projects': {}
+				'Users':
 					'david': {}
 					'john':
 						'passwords.txt': ''
-			)
+			, windows: true)
 			expect(fs._data).to.have.keys([
-				'/', '/var', '/var/www/index.php', '/var/www', '/home/david/documents/school/projects', '/home/david/documents/school',
-				'/home/david/documents', '/home/david', '/home', '/home/john', '/home/john/passwords.txt'
+				'c:', 'c:\\xampp', 'c:\\xampp\\htdocs\\index.php', 'c:\\xampp\\htdocs',
+				'c:\\Users\\david\\documents\\school\\projects', 'c:\\Users\\david\\documents\\school',
+				'c:\\Users\\david\\documents', 'c:\\Users\\david', 'c:\\Users', 'c:\\Users\\john',
+				'c:\\Users\\john\\passwords.txt'
 			])
-			expect(fs.statSync('/var/www/index.php').isFile()).to.be.true
-			expect(fs.statSync('/var/www').isDirectory()).to.be.true
-			expect(fs.statSync('/home/john').isDirectory()).to.be.true
-			expect(fs.statSync('/home/john/passwords.txt').isFile()).to.be.true
+			expect(fs.statSync('c:\\xampp\\htdocs\\index.php').isFile()).to.be.true
+			expect(fs.statSync('c:\\xampp\\htdocs').isDirectory()).to.be.true
+			expect(fs.statSync('c:\\Users\\john').isDirectory()).to.be.true
+			expect(fs.statSync('c:\\Users\\john\\passwords.txt').isFile()).to.be.true
+
+
+	#*******************************************************************************************************************
+	#										OPTIONS
+	#*******************************************************************************************************************
+
+	describe 'options', ->
+
+		it 'should create mocked fs with root directory', ->
+			fs = new FS({}, {windows: true})
+			expect(fs._data).to.have.keys(['c:'])
+
+		it 'should create mocked fs with different root', ->
+			fs = new FS(
+				'xampp':
+					'htdocs':
+						'index.php': ''
+				'Users\\David\\passwords.txt': ''
+			, windows: true, root: 'd:')
+			expect(fs._data).to.have.keys([
+				'd:', 'd:\\xampp', 'd:\\xampp\\htdocs', 'd:\\xampp\\htdocs\\index.php', 'd:\\Users', 'd:\\Users\\David',
+				'd:\\Users\\David\\passwords.txt'
+			])
+
+		it 'should create mocked fs with other drives', ->
+			fs = new FS(
+				'Users\\David\\passwords.txt': ''
+			, windows: true, drives: ['d:', 'z:', 'x:'])
+			expect(fs._data).to.have.keys([
+				'c:', 'c:\\Users', 'c:\\Users\\David', 'c:\\Users\\David\\passwords.txt', 'd:', 'z:', 'x:'
+			])
+
+		it 'should create mocked fs with files in different drives', ->
+			fs = new FS(
+				'c:\\Users\\David\\passwords.txt': {}
+				'x:\\xampp\\htdocs\\index.php': ''
+			, windows: true, root: false)
+			expect(fs._data).to.have.keys([
+				'c:', 'c:\\Users', 'c:\\Users\\David', 'c:\\Users\\David\\passwords.txt',
+				'x:', 'x:\\xampp', 'x:\\xampp\\htdocs', 'x:\\xampp\\htdocs\\index.php'
+			])
 
 
 	#*******************************************************************************************************************
@@ -46,27 +89,27 @@ describe 'fs', ->
 	describe '#rename()', ->
 
 		it 'should return an error if path does not exists', (done) ->
-			fs.rename('/var/www', '/var/old_www', (err) ->
+			fs.rename('c:\\xampp\\htdocs', 'c:\\xampp\old_htdocs', (err) ->
 				expect(err).to.be.an.instanceof(Error)
-				expect(err.message).to.be.equal("File or directory '/var/www' does not exists.")
+				expect(err.message).to.be.equal("File or directory 'c:\\xampp\\htdocs' does not exists.")
 				done()
 			)
 
 		it 'should return an error if path with new name already exists', (done) ->
-			fs.mkdirSync('/var/www')
-			fs.mkdirSync('/var/old_www')
-			fs.rename('/var/www', '/var/old_www', (err) ->
+			fs.mkdirSync('c:\\xampp\\htdocs')
+			fs.mkdirSync('c:\\xampp\old_htdocs')
+			fs.rename('c:\\xampp\\htdocs', 'c:\\xampp\old_htdocs', (err) ->
 				expect(err).to.be.an.instanceof(Error)
-				expect(err.message).to.be.equal("File or directory '/var/old_www' already exists.")
+				expect(err.message).to.be.equal("File or directory 'c:\\xampp\old_htdocs' already exists.")
 				done()
 			)
 
 		it 'should rename path', (done) ->
-			fs.mkdirSync('/var/www')
-			fs.rename('/var/www', '/var/old_www', (err) ->
+			fs.mkdirSync('c:\\xampp\\htdocs')
+			fs.rename('c:\\xampp\\htdocs', 'c:\\xampp\old_htdocs', (err) ->
 				expect(err).to.not.exists
-				expect(fs.existsSync('/var/www')).to.be.false
-				expect(fs._data).to.have.keys(['/', '/var', '/var/old_www'])
+				expect(fs.existsSync('c:\\xampp\\htdocs')).to.be.false
+				expect(fs._data).to.have.keys(['c:', 'c:\\xampp', 'c:\\xampp\old_htdocs'])
 				done()
 			)
 
@@ -86,19 +129,19 @@ describe 'fs', ->
 			)
 
 		it 'should return an error if file is not opened for writening', (done) ->
-			fs.writeFileSync('/var/www/index.php', '')
-			fd = fs.openSync('/var/www/index.php', 'r')
+			fs.writeFileSync('c:\\xampp\\htdocs\\index.php', '')
+			fd = fs.openSync('c:\\xampp\\htdocs\\index.php', 'r')
 			fs.ftruncate(fd, 10, (err) ->
 				expect(err).to.be.an.instanceof(Error)
-				expect(err.message).to.be.equal("File '/var/www/index.php' is not open for writing.")
+				expect(err.message).to.be.equal("File 'c:\\xampp\\htdocs\\index.php' is not open for writing.")
 				done()
 			)
 
 		it 'should truncate file data', (done) ->
-			fs.writeFileSync('/var/www/index.php', 'hello word')
-			fd = fs.openSync('/var/www/index.php', 'w+')
+			fs.writeFileSync('c:\\xampp\\htdocs\\index.php', 'hello word')
+			fd = fs.openSync('c:\\xampp\\htdocs\\index.php', 'w+')
 			fs.ftruncate(fd, 5, ->
-				expect(fs.readFileSync('/var/www/index.php', encoding: 'utf8')).to.be.equal('hello')
+				expect(fs.readFileSync('c:\\xampp\\htdocs\\index.php', encoding: 'utf8')).to.be.equal('hello')
 				done()
 			)
 
@@ -111,31 +154,31 @@ describe 'fs', ->
 	describe '#truncate()', ->
 
 		it 'should return an error if path does not exists', (done) ->
-			fs.truncate('/var/www/index.php', 10, (err) ->
+			fs.truncate('c:\\xampp\\htdocs\\index.php', 10, (err) ->
 				expect(err).to.be.an.instanceof(Error)
-				expect(err.message).to.be.equal("File or directory '/var/www/index.php' does not exists.")
+				expect(err.message).to.be.equal("File or directory 'c:\\xampp\\htdocs\\index.php' does not exists.")
 				done()
 			)
 
 		it 'should return an error if path is not file', (done) ->
-			fs.mkdirSync('/var/www')
-			fs.truncate('/var/www', 10, (err) ->
+			fs.mkdirSync('c:\\xampp\\htdocs')
+			fs.truncate('c:\\xampp\\htdocs', 10, (err) ->
 				expect(err).to.be.an.instanceof(Error)
-				expect(err.message).to.be.equal("Path '/var/www' is not a file.")
+				expect(err.message).to.be.equal("Path 'c:\\xampp\\htdocs' is not a file.")
 				done()
 			)
 
 		it 'should leave file data if needed length is larger than data length', (done) ->
-			fs.writeFileSync('/var/www/index.php', 'hello word')
-			fs.truncate('/var/www/index.php', 15, ->
-				expect(fs.readFileSync('/var/www/index.php', encoding: 'utf8')).to.be.equal('hello word')
+			fs.writeFileSync('c:\\xampp\\htdocs\\index.php', 'hello word')
+			fs.truncate('c:\\xampp\\htdocs\\index.php', 15, ->
+				expect(fs.readFileSync('c:\\xampp\\htdocs\\index.php', encoding: 'utf8')).to.be.equal('hello word')
 				done()
 			)
 
 		it 'should truncate file data', (done) ->
-			fs.writeFileSync('/var/www/index.php', 'hello word')
-			fs.truncate('/var/www/index.php', 5, ->
-				expect(fs.readFileSync('/var/www/index.php', encoding: 'utf8')).to.be.equal('hello')
+			fs.writeFileSync('c:\\xampp\\htdocs\\index.php', 'hello word')
+			fs.truncate('c:\\xampp\\htdocs\\index.php', 5, ->
+				expect(fs.readFileSync('c:\\xampp\\htdocs\\index.php', encoding: 'utf8')).to.be.equal('hello')
 				done()
 			)
 
@@ -148,16 +191,16 @@ describe 'fs', ->
 	describe '#chown()', ->
 
 		it 'should return an error if path does not exists', (done) ->
-			fs.chown('/var/www', 200, 200, (err) ->
+			fs.chown('c:\\xampp\\htdocs', 200, 200, (err) ->
 				expect(err).to.be.an.instanceof(Error)
-				expect(err.message).to.be.equal("File or directory '/var/www' does not exists.")
+				expect(err.message).to.be.equal("File or directory 'c:\\xampp\\htdocs' does not exists.")
 				done()
 			)
 
 		it 'should change uid and gid', (done) ->
-			fs.mkdirSync('/var/www')
-			fs.chown('/var/www', 300, 200, ->
-				stats = fs.statSync('/var/www')
+			fs.mkdirSync('c:\\xampp\\htdocs')
+			fs.chown('c:\\xampp\\htdocs', 300, 200, ->
+				stats = fs.statSync('c:\\xampp\\htdocs')
 				expect(stats.uid).to.be.equal(300)
 				expect(stats.gid).to.be.equal(200)
 				done()
@@ -179,8 +222,8 @@ describe 'fs', ->
 			)
 
 		it 'should change uid and  gid', (done) ->
-			fs.mkdirSync('/var/www')
-			fs.open('/var/www', 'r', (err, fd) ->
+			fs.mkdirSync('c:\\xampp\\htdocs')
+			fs.open('c:\\xampp\\htdocs', 'r', (err, fd) ->
 				fs.fchown(fd, 300, 400, ->
 					stats = fs.fstatSync(fd)
 					expect(stats.uid).to.be.equal(300)
@@ -198,25 +241,25 @@ describe 'fs', ->
 	describe '#lchown()', ->
 
 		it 'should return an error if path does not exists', (done) ->
-			fs.lchown('/var/www/index.php', 200, 200, (err) ->
+			fs.lchown('c:\\xampp\\htdocs\\index.php', 200, 200, (err) ->
 				expect(err).to.be.an.instanceof(Error)
-				expect(err.message).to.be.equal("File or directory '/var/www/index.php' does not exists.")
+				expect(err.message).to.be.equal("File or directory 'c:\\xampp\\htdocs\\index.php' does not exists.")
 				done()
 			)
 
 		it 'should return an error if path is not symlink', (done) ->
-			fs.writeFileSync('/var/www/index.php', '')
-			fs.lchown('/var/www/index.php', 200, 200, (err) ->
+			fs.writeFileSync('c:\\xampp\\htdocs\\index.php', '')
+			fs.lchown('c:\\xampp\\htdocs\\index.php', 200, 200, (err) ->
 				expect(err).to.be.an.instanceof(Error)
-				expect(err.message).to.be.equal("Path '/var/www/index.php' is not a symbolic link.")
+				expect(err.message).to.be.equal("Path 'c:\\xampp\\htdocs\\index.php' is not a symbolic link.")
 				done()
 			)
 
 		it 'should change uid and gid of symlink', (done) ->
-			fs.writeFileSync('/var/www/index.php', '')
-			fs.symlinkSync('/var/www/index.php', '/var/www/default.php')
-			fs.lchown('/var/www/default.php', 500, 600, ->
-				stats = fs.lstatSync('/var/www/default.php')
+			fs.writeFileSync('c:\\xampp\\htdocs\\index.php', '')
+			fs.symlinkSync('c:\\xampp\\htdocs\\index.php', 'c:\\xampp\\htdocs\\default.php')
+			fs.lchown('c:\\xampp\\htdocs\\default.php', 500, 600, ->
+				stats = fs.lstatSync('c:\\xampp\\htdocs\\default.php')
 				expect(stats.uid).to.be.equal(500)
 				expect(stats.gid).to.be.equal(600)
 				done()
@@ -231,16 +274,16 @@ describe 'fs', ->
 	describe '#chmod()', ->
 
 		it 'should return an error if path does not exists', (done) ->
-			fs.chmod('/var/www', 777, (err) ->
+			fs.chmod('c:\\xampp\\htdocs', 777, (err) ->
 				expect(err).to.be.an.instanceof(Error)
-				expect(err.message).to.be.equal("File or directory '/var/www' does not exists.")
+				expect(err.message).to.be.equal("File or directory 'c:\\xampp\\htdocs' does not exists.")
 				done()
 			)
 
 		it 'should change mode', (done) ->
-			fs.mkdirSync('/var/www')
-			fs.chmod('/var/www', 777, ->
-				expect(fs.statSync('/var/www').mode).to.be.equal(777)
+			fs.mkdirSync('c:\\xampp\\htdocs')
+			fs.chmod('c:\\xampp\\htdocs', 777, ->
+				expect(fs.statSync('c:\\xampp\\htdocs').mode).to.be.equal(777)
 				done()
 			)
 
@@ -260,8 +303,8 @@ describe 'fs', ->
 			)
 
 		it 'should change mode', (done) ->
-			fs.writeFileSync('/var/www/index.php', '')
-			fs.open('/var/www/index.php', 'r', (err, fd) ->
+			fs.writeFileSync('c:\\xampp\\htdocs\\index.php', '')
+			fs.open('c:\\xampp\\htdocs\\index.php', 'r', (err, fd) ->
 				fs.fchmod(fd, 777, ->
 					expect(fs.fstatSync(fd).mode).to.be.equal(777)
 					done()
@@ -277,25 +320,25 @@ describe 'fs', ->
 	describe '#lchmod()', ->
 
 		it 'should return an error if path does not exists', (done) ->
-			fs.lchmod('/var/www', 777, (err) ->
+			fs.lchmod('c:\\xampp\\htdocs', 777, (err) ->
 				expect(err).to.be.an.instanceof(Error)
-				expect(err.message).to.be.equal("File or directory '/var/www' does not exists.")
+				expect(err.message).to.be.equal("File or directory 'c:\\xampp\\htdocs' does not exists.")
 				done()
 			)
 
 		it 'should return an error if path is not symlink', (done) ->
-			fs.mkdirSync('/var/www')
-			fs.lchmod('/var/www', 777, (err) ->
+			fs.mkdirSync('c:\\xampp\\htdocs')
+			fs.lchmod('c:\\xampp\\htdocs', 777, (err) ->
 				expect(err).to.be.an.instanceof(Error)
-				expect(err.message).to.be.equal("Path '/var/www' is not a symbolic link.")
+				expect(err.message).to.be.equal("Path 'c:\\xampp\\htdocs' is not a symbolic link.")
 				done()
 			)
 
 		it 'should change mode of symlink', (done) ->
-			fs.writeFileSync('/var/www/index.php', '')
-			fs.symlinkSync('/var/www/index.php', '/var/www/default.php')
-			fs.lchmod('/var/www/default.php', 777, ->
-				expect(fs.lstatSync('/var/www/default.php').mode).to.be.equal(777)
+			fs.writeFileSync('c:\\xampp\\htdocs\\index.php', '')
+			fs.symlinkSync('c:\\xampp\\htdocs\\index.php', 'c:\\xampp\\htdocs\\default.php')
+			fs.lchmod('c:\\xampp\\htdocs\\default.php', 777, ->
+				expect(fs.lstatSync('c:\\xampp\\htdocs\\default.php').mode).to.be.equal(777)
 				done()
 			)
 
@@ -308,15 +351,15 @@ describe 'fs', ->
 	describe '#stat()', ->
 
 		it 'should return an error if path does not exists', (done) ->
-			fs.stat('/var/www', (err) ->
+			fs.stat('c:\\xampp\\htdocs', (err) ->
 				expect(err).to.be.an.instanceof(Error)
-				expect(err.message).to.be.equal("File or directory '/var/www' does not exists.")
+				expect(err.message).to.be.equal("File or directory 'c:\\xampp\\htdocs' does not exists.")
 				done()
 			)
 
 		it 'should return stats object for path', (done) ->
-			fs.writeFileSync('/var/www/index.php', '')
-			fs.stat('/var/www/index.php', (err, stats) ->
+			fs.writeFileSync('c:\\xampp\\htdocs\\index.php', '')
+			fs.stat('c:\\xampp\\htdocs\\index.php', (err, stats) ->
 				expect(stats).to.be.an.instanceof(Stats)
 				expect(stats.isFile()).to.be.true
 				done()
@@ -331,24 +374,24 @@ describe 'fs', ->
 	describe '#lstat()', ->
 
 		it 'should return an error if path does not exists', (done) ->
-			fs.lstat('/var/www', (err) ->
+			fs.lstat('c:\\xampp\\htdocs', (err) ->
 				expect(err).to.be.an.instanceof(Error)
-				expect(err.message).to.be.equal("File or directory '/var/www' does not exists.")
+				expect(err.message).to.be.equal("File or directory 'c:\\xampp\\htdocs' does not exists.")
 				done()
 			)
 
 		it 'should return an error if path is not a symlink', (done) ->
-			fs.mkdirSync('/var/www')
-			fs.lstat('/var/www', (err) ->
+			fs.mkdirSync('c:\\xampp\\htdocs')
+			fs.lstat('c:\\xampp\\htdocs', (err) ->
 				expect(err).to.be.an.instanceof(Error)
-				expect(err.message).to.be.equal("Path '/var/www' is not a symbolic link.")
+				expect(err.message).to.be.equal("Path 'c:\\xampp\\htdocs' is not a symbolic link.")
 				done()
 			)
 
 		it 'should return stats for symlink', (done) ->
-			fs.mkdirSync('/var/www')
-			fs.symlinkSync('/var/www', '/var/document_root')
-			fs.lstat('/var/document_root', (err, stats) ->
+			fs.mkdirSync('c:\\xampp\\htdocs')
+			fs.symlinkSync('c:\\xampp\\htdocs', 'c:\\xampp\\document_root')
+			fs.lstat('c:\\xampp\\document_root', (err, stats) ->
 				expect(stats.isSymbolicLink()).to.be.true
 				done()
 			)
@@ -369,11 +412,11 @@ describe 'fs', ->
 			)
 
 		it 'should return stat object', (done) ->
-			fs.writeFileSync('/var/www/index.php', '')
-			fs.open('/var/www/index.php', 'r', (err, fd) ->
+			fs.writeFileSync('c:\\xampp\\htdocs\\index.php', '')
+			fs.open('c:\\xampp\\htdocs\\index.php', 'r', (err, fd) ->
 				fs.fstat(fd, (err, stats) ->
 					expect(stats).to.be.an.instanceof(Stats)
-					expect(stats._path).to.be.equal('/var/www/index.php')
+					expect(stats._path).to.be.equal('c:\\xampp\\htdocs\\index.php')
 					done()
 				)
 			)
@@ -387,17 +430,17 @@ describe 'fs', ->
 	describe '#link()', ->
 
 		it 'should return an error if source path does not exists', (done) ->
-			fs.link('/var/www/index.php', '/var/www/default.php', (err) ->
+			fs.link('c:\\xampp\\htdocs\\index.php', 'c:\\xampp\\htdocs\\default.php', (err) ->
 				expect(err).to.be.an.instanceof(Error)
-				expect(err.message).to.be.equal("File or directory '/var/www/index.php' does not exists.")
+				expect(err.message).to.be.equal("File or directory 'c:\\xampp\\htdocs\\index.php' does not exists.")
 				done()
 			)
 
 		it 'should create link to file', (done) ->
-			fs.writeFileSync('/var/www/index.php', '')
-			fs.link('/var/www/index.php', '/var/www/default.php', ->
-				expect(fs.existsSync('/var/www/default.php')).to.be.true
-				expect(fs.statSync('/var/www/default.php').isFile()).to.be.true
+			fs.writeFileSync('c:\\xampp\\htdocs\\index.php', '')
+			fs.link('c:\\xampp\\htdocs\\index.php', 'c:\\xampp\\htdocs\\default.php', ->
+				expect(fs.existsSync('c:\\xampp\\htdocs\\default.php')).to.be.true
+				expect(fs.statSync('c:\\xampp\\htdocs\\default.php').isFile()).to.be.true
 				done()
 			)
 
@@ -410,16 +453,16 @@ describe 'fs', ->
 	describe '#symlink()', ->
 
 		it 'should return an error if source path does not exists', (done) ->
-			fs.symlink('/var/www/index.php', '/var/www/default.php', (err) ->
+			fs.symlink('c:\\xampp\\htdocs\\index.php', 'c:\\xampp\\htdocs\\default.php', (err) ->
 				expect(err).to.be.an.instanceof(Error)
-				expect(err.message).to.be.equal("File or directory '/var/www/index.php' does not exists.")
+				expect(err.message).to.be.equal("File or directory 'c:\\xampp\\htdocs\\index.php' does not exists.")
 				done()
 			)
 
 		it 'should create link to file', (done) ->
-			fs.writeFileSync('/var/www/index.php', '')
-			fs.symlink('/var/www/index.php', '/var/www/default.php', ->
-				expect(fs.existsSync('/var/www/default.php')).to.be.true
+			fs.writeFileSync('c:\\xampp\\htdocs\\index.php', '')
+			fs.symlink('c:\\xampp\\htdocs\\index.php', 'c:\\xampp\\htdocs\\default.php', ->
+				expect(fs.existsSync('c:\\xampp\\htdocs\\default.php')).to.be.true
 				done()
 			)
 
@@ -432,34 +475,34 @@ describe 'fs', ->
 	describe '#readlink()', ->
 
 		it 'should return an error if source path does not exists', (done) ->
-			fs.readlink('/var/www/default.php', (err) ->
+			fs.readlink('c:\\xampp\\htdocs\\default.php', (err) ->
 				expect(err).to.be.an.instanceof(Error)
-				expect(err.message).to.be.equal("File or directory '/var/www/default.php' does not exists.")
+				expect(err.message).to.be.equal("File or directory 'c:\\xampp\\htdocs\\default.php' does not exists.")
 				done()
 			)
 
 		it 'should get path of hard link', (done) ->
-			fs.writeFileSync('/var/www/index.php', '')
-			fs.link('/var/www/index.php', '/var/www/default.php', ->
-				fs.readlink('/var/www/../../var/www/something/../default.php', (err, path) ->
-					expect(path).to.be.equal('/var/www/default.php')
+			fs.writeFileSync('c:\\xampp\\htdocs\\index.php', '')
+			fs.link('c:\\xampp\\htdocs\\index.php', 'c:\\xampp\\htdocs\\default.php', ->
+				fs.readlink('c:\\xampp\\htdocs\\..\\..\\xampp\\htdocs\\something\\..\\default.php', (err, path) ->
+					expect(path).to.be.equal('c:\\xampp\\htdocs\\default.php')
 					done()
 				)
 			)
 
 		it 'should get path to source file of symlink', (done) ->
-			fs.writeFileSync('/var/www/index.php', '')
-			fs.symlink('/var/www/index.php', '/var/www/default.php', ->
-				fs.readlink('/var/www/../../var/www/something/../default.php', (err, path) ->
-					expect(path).to.be.equal('/var/www/index.php')
+			fs.writeFileSync('c:\\xampp\\htdocs\\index.php', '')
+			fs.symlink('c:\\xampp\\htdocs\\index.php', 'c:\\xampp\\htdocs\\default.php', ->
+				fs.readlink('c:\\xampp\\htdocs\\..\\..\\xampp\\htdocs\\something\\..\\default.php', (err, path) ->
+					expect(path).to.be.equal('c:\\xampp\\htdocs\\index.php')
 					done()
 				)
 			)
 
 		it 'should get normalized path to file if it is not link', (done) ->
-			fs.writeFileSync('/var/www/index.php', '')
-			fs.readlink('/var/www/../../var/www/something/../index.php', (err, path) ->
-				expect(path).to.be.equal('/var/www/index.php')
+			fs.writeFileSync('c:\\xampp\\htdocs\\index.php', '')
+			fs.readlink('c:\\xampp\\htdocs\\..\\..\\xampp\\htdocs\\something\\..\\index.php', (err, path) ->
+				expect(path).to.be.equal('c:\\xampp\\htdocs\\index.php')
 				done()
 			)
 
@@ -472,22 +515,22 @@ describe 'fs', ->
 	describe '#realpath()', ->
 
 		it 'should return an error if path does not exists', (done) ->
-			fs.realpath('/var/www', (err) ->
+			fs.realpath('c:\\xampp\\htdocs', (err) ->
 				expect(err).to.be.an.instanceof(Error)
-				expect(err.message).to.be.equal("File or directory '/var/www' does not exists.")
+				expect(err.message).to.be.equal("File or directory 'c:\\xampp\\htdocs' does not exists.")
 				done()
 			)
 
 		it 'should load realpath from cache object', (done) ->
-			fs.realpath('/var/www', '/var/www': '/var/data/www', (err, resolvedPath) ->
-				expect(resolvedPath).to.be.equal('/var/data/www')
+			fs.realpath('c:\\xampp\\htdocs', 'c:\\xampp\\htdocs': 'c:\\xampp\\data\\www', (err, resolvedPath) ->
+				expect(resolvedPath).to.be.equal('c:\\xampp\\data\\www')
 				done()
 			)
 
 		it 'should return resolved realpath', (done) ->
-			fs.writeFileSync('/var/www/index.php', '')
-			fs.realpath('/var/www/data/../../www/index.php', (err, resolvedPath) ->
-				expect(resolvedPath).to.be.equal('/var/www/index.php')
+			fs.writeFileSync('c:\\xampp\\htdocs\\index.php', '')
+			fs.realpath('c:\\xampp\\htdocs\\data\\..\\..\\htdocs\\index.php', (err, resolvedPath) ->
+				expect(resolvedPath).to.be.equal('c:\\xampp\\htdocs\\index.php')
 				done()
 			)
 
@@ -500,24 +543,24 @@ describe 'fs', ->
 	describe '#unlink()', ->
 
 		it 'should return an error if path does not exists', (done) ->
-			fs.unlink('/var/www/index.php', (err) ->
+			fs.unlink('c:\\xampp\\htdocs\\index.php', (err) ->
 				expect(err).to.be.an.instanceof(Error)
-				expect(err.message).to.be.equal("File or directory '/var/www/index.php' does not exists.")
+				expect(err.message).to.be.equal("File or directory 'c:\\xampp\\htdocs\\index.php' does not exists.")
 				done()
 			)
 
 		it 'should return an error if path is not file', (done) ->
-			fs.mkdirSync('/var/www')
-			fs.unlink('/var/www', (err) ->
+			fs.mkdirSync('c:\\xampp\\htdocs')
+			fs.unlink('c:\\xampp\\htdocs', (err) ->
 				expect(err).to.be.an.instanceof(Error)
-				expect(err.message).to.be.equal("Path '/var/www' is not a file.")
+				expect(err.message).to.be.equal("Path 'c:\\xampp\\htdocs' is not a file.")
 				done()
 			)
 
 		it 'should remove file', (done) ->
-			fs.writeFileSync('/var/www/index.php', '')
-			fs.unlink('/var/www/index.php', ->
-				expect(fs._data).to.have.keys(['/', '/var/www', '/var'])
+			fs.writeFileSync('c:\\xampp\\htdocs\\index.php', '')
+			fs.unlink('c:\\xampp\\htdocs\\index.php', ->
+				expect(fs._data).to.have.keys(['c:', 'c:\\xampp\\htdocs', 'c:\\xampp'])
 				done()
 			)
 
@@ -530,33 +573,33 @@ describe 'fs', ->
 	describe '#rmdir()', ->
 
 		it 'should return an error if path does not exists', (done) ->
-			fs.rmdir('/var/www', (err) ->
+			fs.rmdir('c:\\xampp\\htdocs', (err) ->
 				expect(err).to.be.an.instanceof(Error)
-				expect(err.message).to.be.equal("File or directory '/var/www' does not exists.")
+				expect(err.message).to.be.equal("File or directory 'c:\\xampp\\htdocs' does not exists.")
 				done()
 			)
 
 		it 'should return an error if path is not directory', (done) ->
-			fs.writeFileSync('/var/www/index.php', '')
-			fs.rmdir('/var/www/index.php', (err) ->
+			fs.writeFileSync('c:\\xampp\\htdocs\\index.php', '')
+			fs.rmdir('c:\\xampp\\htdocs\\index.php', (err) ->
 				expect(err).to.be.an.instanceof(Error)
-				expect(err.message).to.be.equal("Path '/var/www/index.php' is not a directory.")
+				expect(err.message).to.be.equal("Path 'c:\\xampp\\htdocs\\index.php' is not a directory.")
 				done()
 			)
 
 		it 'should return an error if directory is not empty', (done) ->
-			fs.mkdirSync('/var/www')
-			fs.writeFileSync('/var/www/index.php', '')
-			fs.rmdir('/var/www', (err) ->
+			fs.mkdirSync('c:\\xampp\\htdocs')
+			fs.writeFileSync('c:\\xampp\\htdocs\\index.php', '')
+			fs.rmdir('c:\\xampp\\htdocs', (err) ->
 				expect(err).to.be.an.instanceof(Error)
-				expect(err.message).to.be.equal("Directory '/var/www' is not empty.")
+				expect(err.message).to.be.equal("Directory 'c:\\xampp\\htdocs' is not empty.")
 				done()
 			)
 
 		it 'should remove directory', (done) ->
-			fs.mkdirSync('/var/www')
-			fs.rmdir('/var/www', ->
-				expect(fs._data).to.have.keys(['/', '/var'])
+			fs.mkdirSync('c:\\xampp\\htdocs')
+			fs.rmdir('c:\\xampp\\htdocs', ->
+				expect(fs._data).to.have.keys(['c:', 'c:\\xampp'])
 				done()
 			)
 
@@ -569,16 +612,16 @@ describe 'fs', ->
 	describe '#mkdir()', ->
 
 		it 'should return an error if path already exists', (done) ->
-			fs.mkdirSync('/var/www')
-			fs.mkdir('/var/www', (err) ->
+			fs.mkdirSync('c:\\xampp\\htdocs')
+			fs.mkdir('c:\\xampp\\htdocs', (err) ->
 				expect(err).to.be.an.instanceof(Error)
-				expect(err.message).to.be.equal("File or directory '/var/www' already exists.")
+				expect(err.message).to.be.equal("File or directory 'c:\\xampp\\htdocs' already exists.")
 				done()
 			)
 
 		it 'should create new directory', (done) ->
-			fs.mkdir('/var/www', ->
-				expect(fs._data).to.have.keys(['/', '/var', '/var/www'])
+			fs.mkdir('c:\\xampp\\htdocs', ->
+				expect(fs._data).to.have.keys(['c:', 'c:\\xampp', 'c:\\xampp\\htdocs'])
 				done()
 			)
 
@@ -591,35 +634,35 @@ describe 'fs', ->
 	describe '#readdir()', ->
 
 		it 'should return an error if path does not exists', (done) ->
-			fs.readdir('/var/www', (err) ->
+			fs.readdir('c:\\xampp\\htdocs', (err) ->
 				expect(err).to.be.an.instanceof(Error)
-				expect(err.message).to.be.equal("File or directory '/var/www' does not exists.")
+				expect(err.message).to.be.equal("File or directory 'c:\\xampp\\htdocs' does not exists.")
 				done()
 			)
 
 		it 'should throw an error if path is not directory', (done) ->
-			fs.writeFileSync('/var/www/index.php', '')
-			fs.readdir('/var/www/index.php', (err) ->
+			fs.writeFileSync('c:\\xampp\\htdocs\\index.php', '')
+			fs.readdir('c:\\xampp\\htdocs\\index.php', (err) ->
 				expect(err).to.be.an.instanceof(Error)
-				expect(err.message).to.be.equal("Path '/var/www/index.php' is not a directory.")
+				expect(err.message).to.be.equal("Path 'c:\\xampp\\htdocs\\index.php' is not a directory.")
 				done()
 			)
 
 		it 'should load all files and directories from directory', (done) ->
 			fs = new FS(
-				'/var/www':
+				'xampp\\htdocs':
 					'index.php': ''
 					'project':
 						'school': {}
-				'/home/david': {}
-			)
-			fs.readdir('/var/www', (err, files) ->
+				'Users\\david': {}
+			, windows: true)
+			fs.readdir('c:\\xampp\\htdocs', (err, files) ->
 				expect(files).to.be.eql([
 					'index.php'
 					'project'
 				])
-				expect(fs.statSync('/var/www/index.php').isFile()).to.be.true
-				expect(fs.statSync('/var/www/project').isDirectory()).to.be.true
+				expect(fs.statSync('c:\\xampp\\htdocs\\index.php').isFile()).to.be.true
+				expect(fs.statSync('c:\\xampp\\htdocs\\project').isDirectory()).to.be.true
 				done()
 			)
 
@@ -639,8 +682,8 @@ describe 'fs', ->
 			)
 
 		it 'should close opened file', (done) ->
-			fs.writeFileSync('/var/www/index.php', '')
-			fd = fs.openSync('/var/www/index.php', 'r')
+			fs.writeFileSync('c:\\xampp\\htdocs\\index.php', '')
+			fd = fs.openSync('c:\\xampp\\htdocs\\index.php', 'r')
 			fs.close(fd, ->
 				expect(fs._fileDescriptors).to.be.eql([])
 				done()
@@ -655,71 +698,71 @@ describe 'fs', ->
 	describe '#open()', ->
 
 		it 'should return an error if file does not exists (flag: r)', (done) ->
-			fs.open('/var/www/index.php', 'r', (err) ->
+			fs.open('c:\\xampp\\htdocs\\index.php', 'r', (err) ->
 				expect(err).to.be.an.instanceof(Error)
-				expect(err.message).to.be.equal("File or directory '/var/www/index.php' does not exists.")
+				expect(err.message).to.be.equal("File or directory 'c:\\xampp\\htdocs\\index.php' does not exists.")
 				done()
 			)
 
 		it 'should return an error if file does not exists (flag: r+)', (done) ->
-			fs.open('/var/www/index.php', 'r+', (err) ->
+			fs.open('c:\\xampp\\htdocs\\index.php', 'r+', (err) ->
 				expect(err).to.be.an.instanceof(Error)
-				expect(err.message).to.be.equal("File or directory '/var/www/index.php' does not exists.")
+				expect(err.message).to.be.equal("File or directory 'c:\\xampp\\htdocs\\index.php' does not exists.")
 				done()
 			)
 
 		it 'should return an error if file already exists (flag: wx)', (done) ->
-			fs.writeFileSync('/var/www/index.php', '')
-			fs.open('/var/www/index.php', 'wx', (err) ->
+			fs.writeFileSync('c:\\xampp\\htdocs\\index.php', '')
+			fs.open('c:\\xampp\\htdocs\\index.php', 'wx', (err) ->
 				expect(err).to.be.an.instanceof(Error)
-				expect(err.message).to.be.equal("File or directory '/var/www/index.php' already exists.")
+				expect(err.message).to.be.equal("File or directory 'c:\\xampp\\htdocs\\index.php' already exists.")
 				done()
 			)
 
 		it 'should return an error if file already exists (flag: wx+)', (done) ->
-			fs.writeFileSync('/var/www/index.php', '')
-			fs.open('/var/www/index.php', 'wx+', (err) ->
+			fs.writeFileSync('c:\\xampp\\htdocs\\index.php', '')
+			fs.open('c:\\xampp\\htdocs\\index.php', 'wx+', (err) ->
 				expect(err).to.be.an.instanceof(Error)
-				expect(err.message).to.be.equal("File or directory '/var/www/index.php' already exists.")
+				expect(err.message).to.be.equal("File or directory 'c:\\xampp\\htdocs\\index.php' already exists.")
 				done()
 			)
 
 		it 'should return an error if file already exists (flag: ax)', (done) ->
-			fs.writeFileSync('/var/www/index.php', '')
-			fs.open('/var/www/index.php', 'ax', (err) ->
+			fs.writeFileSync('c:\\xampp\\htdocs\\index.php', '')
+			fs.open('c:\\xampp\\htdocs\\index.php', 'ax', (err) ->
 				expect(err).to.be.an.instanceof(Error)
-				expect(err.message).to.be.equal("File or directory '/var/www/index.php' already exists.")
+				expect(err.message).to.be.equal("File or directory 'c:\\xampp\\htdocs\\index.php' already exists.")
 				done()
 			)
 
 		it 'should return an error if file already exists (flag: ax+)', (done) ->
-			fs.writeFileSync('/var/www/index.php', '')
-			fs.open('/var/www/index.php', 'ax+', (err) ->
+			fs.writeFileSync('c:\\xampp\\htdocs\\index.php', '')
+			fs.open('c:\\xampp\\htdocs\\index.php', 'ax+', (err) ->
 				expect(err).to.be.an.instanceof(Error)
-				expect(err.message).to.be.equal("File or directory '/var/www/index.php' already exists.")
+				expect(err.message).to.be.equal("File or directory 'c:\\xampp\\htdocs\\index.php' already exists.")
 				done()
 			)
 
 		it 'should create new file if it does not exists (flag: w)', (done) ->
-			fs.open('/var/www/index.php', 'w', (err, fd) ->
+			fs.open('c:\\xampp\\htdocs\\index.php', 'w', (err, fd) ->
 				expect(fs.fstatSync(fd).isFile()).to.be.true
 				done()
 			)
 
 		it 'should create new file if it does not exists (flag: w+)', (done) ->
-			fs.open('/var/www/index.php', 'w+', (err, fd) ->
+			fs.open('c:\\xampp\\htdocs\\index.php', 'w+', (err, fd) ->
 				expect(fs.fstatSync(fd).isFile()).to.be.true
 				done()
 			)
 
 		it 'should create new file if it does not exists (flag: a)', (done) ->
-			fs.open('/var/www/index.php', 'a', (err, fd) ->
+			fs.open('c:\\xampp\\htdocs\\index.php', 'a', (err, fd) ->
 				expect(fs.fstatSync(fd).isFile()).to.be.true
 				done()
 			)
 
 		it 'should create new file if it does not exists (flag: a+)', (done) ->
-			fs.open('/var/www/index.php', 'a+', (err, fd) ->
+			fs.open('c:\\xampp\\htdocs\\index.php', 'a+', (err, fd) ->
 				expect(fs.fstatSync(fd).isFile()).to.be.true
 				done()
 			)
@@ -733,14 +776,14 @@ describe 'fs', ->
 	describe '#utimes()', ->
 
 		it 'shoul change atime and mtime', (done) ->
-			fs.writeFileSync('/var/www/index.php', '')
-			atime = fs.statSync('/var/www/index.php').atime
-			mtime = fs.statSync('/var/www/index.php').mtime
+			fs.writeFileSync('c:\\xampp\\htdocs\\index.php', '')
+			atime = fs.statSync('c:\\xampp\\htdocs\\index.php').atime
+			mtime = fs.statSync('c:\\xampp\\htdocs\\index.php').mtime
 
 			setTimeout( ->
-				fs.utimes('/var/www/index.php', new Date, new Date, ->
-					expect(fs.statSync('/var/www/index.php').atime.getTime()).not.to.be.equal(atime.getTime())
-					expect(fs.statSync('/var/www/index.php').mtime.getTime()).not.to.be.equal(mtime.getTime())
+				fs.utimes('c:\\xampp\\htdocs\\index.php', new Date, new Date, ->
+					expect(fs.statSync('c:\\xampp\\htdocs\\index.php').atime.getTime()).not.to.be.equal(atime.getTime())
+					expect(fs.statSync('c:\\xampp\\htdocs\\index.php').mtime.getTime()).not.to.be.equal(mtime.getTime())
 					done()
 				)
 			, 100)
@@ -761,9 +804,9 @@ describe 'fs', ->
 			)
 
 		it 'should change atime and mtime', (done) ->
-			fs.mkdirSync('/var/www')
+			fs.mkdirSync('c:\\xampp\\htdocs')
 
-			fs.open('/var/www', 'r', (err, fd) ->
+			fs.open('c:\\xampp\\htdocs', 'r', (err, fd) ->
 				atime = fs.fstatSync(fd).atime
 				mtime = fs.fstatSync(fd).mtime
 
@@ -807,29 +850,29 @@ describe 'fs', ->
 			)
 
 		it 'should return an error if file is not open for writing', (done) ->
-			fs.writeFileSync('/var/www/index.php', '')
-			fs.open('/var/www/index.php', 'r', (err, fd) ->
+			fs.writeFileSync('c:\\xampp\\htdocs\\index.php', '')
+			fs.open('c:\\xampp\\htdocs\\index.php', 'r', (err, fd) ->
 				fs.write(fd, new Buffer(''), 0, 0, 0, (err) ->
 					expect(err).to.be.an.instanceof(Error)
-					expect(err.message).to.be.equal("File '/var/www/index.php' is not open for writing.")
+					expect(err.message).to.be.equal("File 'c:\\xampp\\htdocs\\index.php' is not open for writing.")
 					done()
 				)
 			)
 
 		it 'should write data to file', (done) ->
-			fs.writeFileSync('/var/www/index.php', 'hello word')
-			fs.open('/var/www/index.php', 'w', (err, fd) ->
+			fs.writeFileSync('c:\\xampp\\htdocs\\index.php', 'hello word')
+			fs.open('c:\\xampp\\htdocs\\index.php', 'w', (err, fd) ->
 				fs.write(fd, new Buffer('hello'), 0, 5, null, ->
-					expect(fs.readFileSync('/var/www/index.php', encoding: 'utf8')).to.be.equal('hello')
+					expect(fs.readFileSync('c:\\xampp\\htdocs\\index.php', encoding: 'utf8')).to.be.equal('hello')
 					done()
 				)
 			)
 
 		it 'should write data to exact position in file', (done) ->
-			fs.writeFileSync('/var/www/index.php', 'helloword')
-			fs.open('/var/www/index.php', 'w', (err, fd) ->
+			fs.writeFileSync('c:\\xampp\\htdocs\\index.php', 'helloword')
+			fs.open('c:\\xampp\\htdocs\\index.php', 'w', (err, fd) ->
 				fs.write(fd, new Buffer(' '), 0, 1, 5, ->
-					expect(fs.readFileSync('/var/www/index.php', encoding: 'utf8')).to.be.equal('hello word')
+					expect(fs.readFileSync('c:\\xampp\\htdocs\\index.php', encoding: 'utf8')).to.be.equal('hello word')
 					done()
 				)
 			)
@@ -850,18 +893,18 @@ describe 'fs', ->
 			)
 
 		it 'should return an error if file is not open for reading', (done) ->
-			fs.writeFileSync('/var/www/index.php', '')
-			fs.open('/var/www/index.php', 'w', (err, fd) ->
+			fs.writeFileSync('c:\\xampp\\htdocs\\index.php', '')
+			fs.open('c:\\xampp\\htdocs\\index.php', 'w', (err, fd) ->
 				fs.read(fd, new Buffer(1), 0, 1, null, (err) ->
 					expect(err).to.be.an.instanceof(Error)
-					expect(err.message).to.be.equal("File '/var/www/index.php' is not open for reading.")
+					expect(err.message).to.be.equal("File 'c:\\xampp\\htdocs\\index.php' is not open for reading.")
 					done()
 				)
 			)
 
 		it 'should read all data', (done) ->
-			fs.writeFileSync('/var/www/index.php', 'hello word')
-			fs.open('/var/www/index.php', 'r', (err, fd) ->
+			fs.writeFileSync('c:\\xampp\\htdocs\\index.php', 'hello word')
+			fs.open('c:\\xampp\\htdocs\\index.php', 'r', (err, fd) ->
 				size = fs.fstatSync(fd).size
 				buffer = new Buffer(size)
 				fs.read(fd, buffer, 0, size, null, (err, bytesRead, buffer) ->
@@ -873,8 +916,8 @@ describe 'fs', ->
 			)
 
 		it 'should read all data byte by byte', (done) ->
-			fs.writeFileSync('/var/www/index.php', 'hello word')
-			fs.open('/var/www/index.php', 'r', (err, fd) ->
+			fs.writeFileSync('c:\\xampp\\htdocs\\index.php', 'hello word')
+			fs.open('c:\\xampp\\htdocs\\index.php', 'r', (err, fd) ->
 				size = fs.fstatSync(fd).size
 				buffer = new Buffer(size)
 				bytesRead = 0
@@ -896,24 +939,24 @@ describe 'fs', ->
 	describe '#readFile()', ->
 
 		it 'should return an error if path does not exists', (done) ->
-			fs.readFile('/var/www/index.php', (err) ->
+			fs.readFile('c:\\xampp\\htdocs\\index.php', (err) ->
 				expect(err).to.be.an.instanceof(Error)
-				expect(err.message).to.be.equal("File or directory '/var/www/index.php' does not exists.")
+				expect(err.message).to.be.equal("File or directory 'c:\\xampp\\htdocs\\index.php' does not exists.")
 				done()
 			)
 
 		it 'should throw an error if path is not file', (done) ->
-			fs.mkdirSync('/var/www')
-			fs.readFile('/var/www', (err) ->
+			fs.mkdirSync('c:\\xampp\\htdocs')
+			fs.readFile('c:\\xampp\\htdocs', (err) ->
 				expect(err).to.be.an.instanceof(Error)
-				expect(err.message).to.be.equal("Path '/var/www' is not a file.")
+				expect(err.message).to.be.equal("Path 'c:\\xampp\\htdocs' is not a file.")
 				done()
 			)
 
 		it 'should read data from file as buffer', (done) ->
 			s = '<?php echo "hello";'
-			fs.writeFileSync('/var/www/index.php', s)
-			fs.readFile('/var/www/index.php', (err, data) ->
+			fs.writeFileSync('c:\\xampp\\htdocs\\index.php', s)
+			fs.readFile('c:\\xampp\\htdocs\\index.php', (err, data) ->
 				expect(data).to.be.an.instanceof(Buffer)
 				expect(data.toString('utf8')).to.be.equal(s)
 				done()
@@ -921,8 +964,8 @@ describe 'fs', ->
 
 		it 'should read data from file as string', (done) ->
 			s = '<?php echo "hello";'
-			fs.writeFileSync('/var/www/index.php', s)
-			fs.readFile('/var/www/index.php', encoding: 'utf8', (err, data) ->
+			fs.writeFileSync('c:\\xampp\\htdocs\\index.php', s)
+			fs.readFile('c:\\xampp\\htdocs\\index.php', encoding: 'utf8', (err, data) ->
 				expect(data).to.be.equal(s)
 				done()
 			)
@@ -936,16 +979,16 @@ describe 'fs', ->
 	describe '#writeFile()', ->
 
 		it 'should create new file', (done) ->
-			fs.writeFile('/var/www/index.php', '', ->
-				expect(fs._data).to.have.keys(['/', '/var/www/index.php', '/var/www', '/var'])
-				expect(fs.statSync('/var/www/index.php').isFile()).to.be.true
+			fs.writeFile('c:\\xampp\\htdocs\\index.php', '', ->
+				expect(fs._data).to.have.keys(['c:', 'c:\\xampp\\htdocs\\index.php', 'c:\\xampp\\htdocs', 'c:\\xampp'])
+				expect(fs.statSync('c:\\xampp\\htdocs\\index.php').isFile()).to.be.true
 				done()
 			)
 
 		it 'should rewrite old file', (done) ->
-			fs.writeFileSync('/var/www/index.php', 'old')
-			fs.writeFile('/var/www/index.php', 'new', ->
-				expect(fs.readFileSync('/var/www/index.php', encoding: 'utf8')).to.be.equal('new')
+			fs.writeFileSync('c:\\xampp\\htdocs\\index.php', 'old')
+			fs.writeFile('c:\\xampp\\htdocs\\index.php', 'new', ->
+				expect(fs.readFileSync('c:\\xampp\\htdocs\\index.php', encoding: 'utf8')).to.be.equal('new')
 				done()
 			)
 
@@ -958,23 +1001,23 @@ describe 'fs', ->
 	describe '#appendFile()', ->
 
 		it 'should return an error if path is not file', (done) ->
-			fs.mkdirSync('/var/www')
-			fs.appendFile('/var/www', '', (err) ->
+			fs.mkdirSync('c:\\xampp\\htdocs')
+			fs.appendFile('c:\\xampp\\htdocs', '', (err) ->
 				expect(err).to.be.an.instanceof(Error)
-				expect(err.message).to.be.equal("Path '/var/www' is not a file.")
+				expect(err.message).to.be.equal("Path 'c:\\xampp\\htdocs' is not a file.")
 				done()
 			)
 
 		it 'should create new file', (done) ->
-			fs.appendFile('/var/www/index.php', 'hello', (err) ->
-				expect(fs.readFileSync('/var/www/index.php', encoding: 'utf8')).to.be.equal('hello')
+			fs.appendFile('c:\\xampp\\htdocs\\index.php', 'hello', (err) ->
+				expect(fs.readFileSync('c:\\xampp\\htdocs\\index.php', encoding: 'utf8')).to.be.equal('hello')
 				done()
 			)
 
 		it 'should append data to file with buffer', (done) ->
-			fs.writeFileSync('/var/www/index.php', 'one')
-			fs.appendFile('/var/www/index.php', new Buffer(', two'), ->
-				expect(fs.readFileSync('/var/www/index.php', encoding: 'utf8')).to.be.equal('one, two')
+			fs.writeFileSync('c:\\xampp\\htdocs\\index.php', 'one')
+			fs.appendFile('c:\\xampp\\htdocs\\index.php', new Buffer(', two'), ->
+				expect(fs.readFileSync('c:\\xampp\\htdocs\\index.php', encoding: 'utf8')).to.be.equal('one, two')
 				done()
 			)
 
@@ -987,44 +1030,44 @@ describe 'fs', ->
 	describe '#watch()', ->
 
 		it 'should throw an error if path does not exists', ->
-			expect( -> fs.watch('/var/www')).to.throw(Error, "File or directory '/var/www' does not exists.")
+			expect( -> fs.watch('c:\\xampp\\htdocs')).to.throw(Error, "File or directory 'c:\\xampp\\htdocs' does not exists.")
 
 		it 'should call listener when attributes were changed', (done) ->
-			fs.writeFileSync('/var/www/index.php', '')
-			fs.watch('/var/www/index.php', (event, filename) ->
+			fs.writeFileSync('c:\\xampp\\htdocs\\index.php', '')
+			fs.watch('c:\\xampp\\htdocs\\index.php', (event, filename) ->
 				expect(event).to.be.equal('change')
-				expect(filename).to.be.equal('/var/www/index.php')
+				expect(filename).to.be.equal('c:\\xampp\\htdocs\\index.php')
 				done()
 			)
-			fs.utimesSync('/var/www/index.php', new Date, new Date)
+			fs.utimesSync('c:\\xampp\\htdocs\\index.php', new Date, new Date)
 
 		it 'should call listener when file was renamed', (done) ->
-			fs.writeFileSync('/var/www/index.php', '')
-			fs.watch('/var/www/index.php', (event, filename) ->
+			fs.writeFileSync('c:\\xampp\\htdocs\\index.php', '')
+			fs.watch('c:\\xampp\\htdocs\\index.php', (event, filename) ->
 				expect(event).to.be.equal('rename')
-				expect(filename).to.be.equal('/var/www/default.php')
+				expect(filename).to.be.equal('c:\\xampp\\htdocs\\default.php')
 				done()
 			)
-			fs.renameSync('/var/www/index.php', '/var/www/default.php')
+			fs.renameSync('c:\\xampp\\htdocs\\index.php', 'c:\\xampp\\htdocs\\default.php')
 
 		it 'should call listener when data was changed', (done) ->
-			fs.writeFileSync('/var/www/index.php', '')
-			fs.watch('/var/www/index.php', (event, filename) ->
+			fs.writeFileSync('c:\\xampp\\htdocs\\index.php', '')
+			fs.watch('c:\\xampp\\htdocs\\index.php', (event, filename) ->
 				expect(event).to.be.equal('change')
-				expect(filename).to.be.equal('/var/www/index.php')
-				expect(fs.readFileSync('/var/www/index.php', encoding: 'utf8')).to.be.equal('hello word')
+				expect(filename).to.be.equal('c:\\xampp\\htdocs\\index.php')
+				expect(fs.readFileSync('c:\\xampp\\htdocs\\index.php', encoding: 'utf8')).to.be.equal('hello word')
 				done()
 			)
-			fs.writeFileSync('/var/www/index.php', 'hello word')
+			fs.writeFileSync('c:\\xampp\\htdocs\\index.php', 'hello word')
 
 		it 'should close watching', (done) ->
-			fs.writeFileSync('/var/www/index.php', '')
+			fs.writeFileSync('c:\\xampp\\htdocs\\index.php', '')
 			called = false
-			watcher = fs.watch('/var/www/index.php', (event, filename) ->
+			watcher = fs.watch('c:\\xampp\\htdocs\\index.php', (event, filename) ->
 				called = true
 			)
 			watcher.close()
-			fs.utimesSync('/var/www/index.php', new Date, new Date)
+			fs.utimesSync('c:\\xampp\\htdocs\\index.php', new Date, new Date)
 			setTimeout( ->
 				expect(called).to.be.false
 				done()
@@ -1039,14 +1082,14 @@ describe 'fs', ->
 	describe '#exists()', ->
 
 		it 'should return false when file does not exists', (done) ->
-			fs.exists('/var/www/index.php', (exists) ->
+			fs.exists('c:\\xampp\\htdocs\\index.php', (exists) ->
 				expect(exists).to.be.false
 				done()
 			)
 
 		it 'should return true when file exists', (done) ->
-			fs.writeFileSync('/var/www/index.php', '')
-			fs.exists('/var/www/index.php', (exists) ->
+			fs.writeFileSync('c:\\xampp\\htdocs\\index.php', '')
+			fs.exists('c:\\xampp\\htdocs\\index.php', (exists) ->
 				expect(exists).to.be.true
 				done()
 			)
@@ -1060,11 +1103,11 @@ describe 'fs', ->
 	describe '#createReadStream()', ->
 
 		it 'should return an error if file does not exists', ->
-			expect( -> fs.createReadStream('/var/www/index.php') ).to.throw(Error, "File or directory '/var/www/index.php' does not exists.")
+			expect( -> fs.createReadStream('c:\\xampp\\htdocs\\index.php') ).to.throw(Error, "File or directory 'c:\\xampp\\htdocs\\index.php' does not exists.")
 
 		it 'should create readable stream', (done) ->
-			fs.writeFileSync('/var/www/index.php', 'hello word')
-			rs = fs.createReadStream('/var/www/index.php').on 'readable', ->
+			fs.writeFileSync('c:\\xampp\\htdocs\\index.php', 'hello word')
+			rs = fs.createReadStream('c:\\xampp\\htdocs\\index.php').on 'readable', ->
 				buf = rs.read()
 				if buf != null
 					expect(buf.toString('utf8')).to.be.equal('hello word')
@@ -1072,8 +1115,8 @@ describe 'fs', ->
 					done()
 
 		it 'should create readable stream with start and end', (done) ->
-			fs.writeFileSync('/var/www/index.php', 'hello word')
-			rs = fs.createReadStream('/var/www/index.php', start: 6, end: 10).on 'readable', ->
+			fs.writeFileSync('c:\\xampp\\htdocs\\index.php', 'hello word')
+			rs = fs.createReadStream('c:\\xampp\\htdocs\\index.php', start: 6, end: 10).on 'readable', ->
 				buf = rs.read()
 				if buf != null
 					expect(buf.toString('utf8')).to.be.equal('word')
@@ -1089,13 +1132,13 @@ describe 'fs', ->
 	describe '#createWriteStream()', ->
 
 		it 'should return an error if file does not exists', ->
-			expect( -> fs.createReadStream('/var/www/index.php') ).to.throw(Error, "File or directory '/var/www/index.php' does not exists.")
+			expect( -> fs.createReadStream('c:\\xampp\\htdocs\\index.php') ).to.throw(Error, "File or directory 'c:\\xampp\\htdocs\\index.php' does not exists.")
 
 		it 'should create writable stream', (done) ->
-			fs.writeFileSync('/var/www/index.php', '')
-			ws = fs.createWriteStream('/var/www/index.php')
+			fs.writeFileSync('c:\\xampp\\htdocs\\index.php', '')
+			ws = fs.createWriteStream('c:\\xampp\\htdocs\\index.php')
 			ws.on 'finish', ->
-				expect(fs.readFileSync('/var/www/index.php', encoding: 'utf8')).to.be.equal('hello word')
+				expect(fs.readFileSync('c:\\xampp\\htdocs\\index.php', encoding: 'utf8')).to.be.equal('hello word')
 				done()
 
 			ws.write('hello')

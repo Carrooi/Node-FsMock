@@ -1,1 +1,2 @@
-require './fs'
+require './fs.posix'
+require './fs.windows'
