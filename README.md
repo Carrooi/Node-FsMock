@@ -174,6 +174,10 @@ $ npm test
 
 ## Changelog
 
+* 1.1.0
+	+ Added support for windows file systems
+	+ Added many tests
+
 * 1.0.1
 	+ Bug with root directories and readdir method
 
