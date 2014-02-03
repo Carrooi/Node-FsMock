@@ -39,6 +39,64 @@ var myPassword = fs.readFileSync('/home/john/password.txt', {encoding: 'utf8'});
 If you write some path like this: `home/david/documents/school/projects`, it will be automatically expanded and all its
 parent directories will be also added to mocked file system.
 
+## Windows
+
+```
+var fs = new FS({
+	'Users': {
+		'David': {
+			'password.txt': 'my super password'
+		}
+	}
+}, {
+	windows: true
+});
+```
+
+This will change delimiter from `/` to `\` and add root directory to `c:`.
+
+### Other drives
+
+```
+new FS({ ... }, {
+	windows: true,
+	drives: ['c:', 'd:', 'z:']
+});
+```
+
+### Another root directory
+
+```
+new FS({ ... }, {
+	windows: true,
+	drives: ['c:', 'd:', 'z:'],
+	root: 'z:'
+});
+```
+
+Now every path will be saved into `z:` drive.
+
+If you want to save paths to custom drives, you need to disable auto saving into `options.root`.
+
+```
+new FS({
+	'c:': {
+		'Users': {}
+	},
+	'x:': {
+		'xampp': {
+			'htdocs': {}
+		}
+	}
+}, {
+	windows: true,
+	root: false
+});
+```
+
+**I haven't got any machine with Windows so all methods (like chmod) works just like in Unix systems. Please let me know
+if you want to improve this and how.**
+
 ## Supported functions
 
 There are also all *Sync methods.
