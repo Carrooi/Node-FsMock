@@ -6,7 +6,7 @@
 
 # fs-mock
 
-Mock for fs module
+Simple fs mock with posix and windows file system styles.
 
 ## Installation
 
