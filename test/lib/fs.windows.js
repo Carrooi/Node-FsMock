@@ -10,53 +10,98 @@
 
   fs = null;
 
-  describe('fs', function() {
+  describe('fs.windows', function() {
     beforeEach(function() {
-      return fs = new FS;
+      return fs = new FS({}, {
+        windows: true
+      });
     });
     describe('#constructor()', function() {
       return it('should parse input data', function() {
         fs = new FS({
-          'var': {},
-          'var/www/index.php': '',
-          'home/david/documents/school/projects': {},
-          'home': {
+          'xampp': {},
+          'xampp\\htdocs\\index.php': '',
+          'Users\\david\\documents\\school\\projects': {},
+          'Users': {
             'david': {},
             'john': {
               'passwords.txt': ''
             }
           }
+        }, {
+          windows: true
         });
-        expect(fs._data).to.have.keys(['/', '/var', '/var/www/index.php', '/var/www', '/home/david/documents/school/projects', '/home/david/documents/school', '/home/david/documents', '/home/david', '/home', '/home/john', '/home/john/passwords.txt']);
-        expect(fs.statSync('/var/www/index.php').isFile()).to.be["true"];
-        expect(fs.statSync('/var/www').isDirectory()).to.be["true"];
-        expect(fs.statSync('/home/john').isDirectory()).to.be["true"];
-        return expect(fs.statSync('/home/john/passwords.txt').isFile()).to.be["true"];
+        expect(fs._data).to.have.keys(['c:', 'c:\\xampp', 'c:\\xampp\\htdocs\\index.php', 'c:\\xampp\\htdocs', 'c:\\Users\\david\\documents\\school\\projects', 'c:\\Users\\david\\documents\\school', 'c:\\Users\\david\\documents', 'c:\\Users\\david', 'c:\\Users', 'c:\\Users\\john', 'c:\\Users\\john\\passwords.txt']);
+        expect(fs.statSync('c:\\xampp\\htdocs\\index.php').isFile()).to.be["true"];
+        expect(fs.statSync('c:\\xampp\\htdocs').isDirectory()).to.be["true"];
+        expect(fs.statSync('c:\\Users\\john').isDirectory()).to.be["true"];
+        return expect(fs.statSync('c:\\Users\\john\\passwords.txt').isFile()).to.be["true"];
+      });
+    });
+    describe('options', function() {
+      it('should create mocked fs with root directory', function() {
+        fs = new FS({}, {
+          windows: true
+        });
+        return expect(fs._data).to.have.keys(['c:']);
+      });
+      it('should create mocked fs with different root', function() {
+        fs = new FS({
+          'xampp': {
+            'htdocs': {
+              'index.php': ''
+            }
+          },
+          'Users\\David\\passwords.txt': ''
+        }, {
+          windows: true,
+          root: 'd:'
+        });
+        return expect(fs._data).to.have.keys(['d:', 'd:\\xampp', 'd:\\xampp\\htdocs', 'd:\\xampp\\htdocs\\index.php', 'd:\\Users', 'd:\\Users\\David', 'd:\\Users\\David\\passwords.txt']);
+      });
+      it('should create mocked fs with other drives', function() {
+        fs = new FS({
+          'Users\\David\\passwords.txt': ''
+        }, {
+          windows: true,
+          drives: ['d:', 'z:', 'x:']
+        });
+        return expect(fs._data).to.have.keys(['c:', 'c:\\Users', 'c:\\Users\\David', 'c:\\Users\\David\\passwords.txt', 'd:', 'z:', 'x:']);
+      });
+      return it('should create mocked fs with files in different drives', function() {
+        fs = new FS({
+          'c:\\Users\\David\\passwords.txt': {},
+          'x:\\xampp\\htdocs\\index.php': ''
+        }, {
+          windows: true,
+          root: false
+        });
+        return expect(fs._data).to.have.keys(['c:', 'c:\\Users', 'c:\\Users\\David', 'c:\\Users\\David\\passwords.txt', 'x:', 'x:\\xampp', 'x:\\xampp\\htdocs', 'x:\\xampp\\htdocs\\index.php']);
       });
     });
     describe('#rename()', function() {
       it('should return an error if path does not exists', function(done) {
-        return fs.rename('/var/www', '/var/old_www', function(err) {
+        return fs.rename('c:\\xampp\\htdocs', 'c:\\xampp\old_htdocs', function(err) {
           expect(err).to.be.an["instanceof"](Error);
-          expect(err.message).to.be.equal("File or directory '/var/www' does not exists.");
+          expect(err.message).to.be.equal("File or directory 'c:\\xampp\\htdocs' does not exists.");
           return done();
         });
       });
       it('should return an error if path with new name already exists', function(done) {
-        fs.mkdirSync('/var/www');
-        fs.mkdirSync('/var/old_www');
-        return fs.rename('/var/www', '/var/old_www', function(err) {
+        fs.mkdirSync('c:\\xampp\\htdocs');
+        fs.mkdirSync('c:\\xampp\old_htdocs');
+        return fs.rename('c:\\xampp\\htdocs', 'c:\\xampp\old_htdocs', function(err) {
           expect(err).to.be.an["instanceof"](Error);
-          expect(err.message).to.be.equal("File or directory '/var/old_www' already exists.");
+          expect(err.message).to.be.equal("File or directory 'c:\\xampp\old_htdocs' already exists.");
           return done();
         });
       });
       return it('should rename path', function(done) {
-        fs.mkdirSync('/var/www');
-        return fs.rename('/var/www', '/var/old_www', function(err) {
+        fs.mkdirSync('c:\\xampp\\htdocs');
+        return fs.rename('c:\\xampp\\htdocs', 'c:\\xampp\old_htdocs', function(err) {
           expect(err).to.not.exists;
-          expect(fs.existsSync('/var/www')).to.be["false"];
-          expect(fs._data).to.have.keys(['/', '/var', '/var/old_www']);
+          expect(fs.existsSync('c:\\xampp\\htdocs')).to.be["false"];
+          expect(fs._data).to.have.keys(['c:', 'c:\\xampp', 'c:\\xampp\old_htdocs']);
           return done();
         });
       });
@@ -71,20 +116,20 @@
       });
       it('should return an error if file is not opened for writening', function(done) {
         var fd;
-        fs.writeFileSync('/var/www/index.php', '');
-        fd = fs.openSync('/var/www/index.php', 'r');
+        fs.writeFileSync('c:\\xampp\\htdocs\\index.php', '');
+        fd = fs.openSync('c:\\xampp\\htdocs\\index.php', 'r');
         return fs.ftruncate(fd, 10, function(err) {
           expect(err).to.be.an["instanceof"](Error);
-          expect(err.message).to.be.equal("File '/var/www/index.php' is not open for writing.");
+          expect(err.message).to.be.equal("File 'c:\\xampp\\htdocs\\index.php' is not open for writing.");
           return done();
         });
       });
       return it('should truncate file data', function(done) {
         var fd;
-        fs.writeFileSync('/var/www/index.php', 'hello word');
-        fd = fs.openSync('/var/www/index.php', 'w+');
+        fs.writeFileSync('c:\\xampp\\htdocs\\index.php', 'hello word');
+        fd = fs.openSync('c:\\xampp\\htdocs\\index.php', 'w+');
         return fs.ftruncate(fd, 5, function() {
-          expect(fs.readFileSync('/var/www/index.php', {
+          expect(fs.readFileSync('c:\\xampp\\htdocs\\index.php', {
             encoding: 'utf8'
           })).to.be.equal('hello');
           return done();
@@ -93,33 +138,33 @@
     });
     describe('#truncate()', function() {
       it('should return an error if path does not exists', function(done) {
-        return fs.truncate('/var/www/index.php', 10, function(err) {
+        return fs.truncate('c:\\xampp\\htdocs\\index.php', 10, function(err) {
           expect(err).to.be.an["instanceof"](Error);
-          expect(err.message).to.be.equal("File or directory '/var/www/index.php' does not exists.");
+          expect(err.message).to.be.equal("File or directory 'c:\\xampp\\htdocs\\index.php' does not exists.");
           return done();
         });
       });
       it('should return an error if path is not file', function(done) {
-        fs.mkdirSync('/var/www');
-        return fs.truncate('/var/www', 10, function(err) {
+        fs.mkdirSync('c:\\xampp\\htdocs');
+        return fs.truncate('c:\\xampp\\htdocs', 10, function(err) {
           expect(err).to.be.an["instanceof"](Error);
-          expect(err.message).to.be.equal("Path '/var/www' is not a file.");
+          expect(err.message).to.be.equal("Path 'c:\\xampp\\htdocs' is not a file.");
           return done();
         });
       });
       it('should leave file data if needed length is larger than data length', function(done) {
-        fs.writeFileSync('/var/www/index.php', 'hello word');
-        return fs.truncate('/var/www/index.php', 15, function() {
-          expect(fs.readFileSync('/var/www/index.php', {
+        fs.writeFileSync('c:\\xampp\\htdocs\\index.php', 'hello word');
+        return fs.truncate('c:\\xampp\\htdocs\\index.php', 15, function() {
+          expect(fs.readFileSync('c:\\xampp\\htdocs\\index.php', {
             encoding: 'utf8'
           })).to.be.equal('hello word');
           return done();
         });
       });
       return it('should truncate file data', function(done) {
-        fs.writeFileSync('/var/www/index.php', 'hello word');
-        return fs.truncate('/var/www/index.php', 5, function() {
-          expect(fs.readFileSync('/var/www/index.php', {
+        fs.writeFileSync('c:\\xampp\\htdocs\\index.php', 'hello word');
+        return fs.truncate('c:\\xampp\\htdocs\\index.php', 5, function() {
+          expect(fs.readFileSync('c:\\xampp\\htdocs\\index.php', {
             encoding: 'utf8'
           })).to.be.equal('hello');
           return done();
@@ -128,17 +173,17 @@
     });
     describe('#chown()', function() {
       it('should return an error if path does not exists', function(done) {
-        return fs.chown('/var/www', 200, 200, function(err) {
+        return fs.chown('c:\\xampp\\htdocs', 200, 200, function(err) {
           expect(err).to.be.an["instanceof"](Error);
-          expect(err.message).to.be.equal("File or directory '/var/www' does not exists.");
+          expect(err.message).to.be.equal("File or directory 'c:\\xampp\\htdocs' does not exists.");
           return done();
         });
       });
       return it('should change uid and gid', function(done) {
-        fs.mkdirSync('/var/www');
-        return fs.chown('/var/www', 300, 200, function() {
+        fs.mkdirSync('c:\\xampp\\htdocs');
+        return fs.chown('c:\\xampp\\htdocs', 300, 200, function() {
           var stats;
-          stats = fs.statSync('/var/www');
+          stats = fs.statSync('c:\\xampp\\htdocs');
           expect(stats.uid).to.be.equal(300);
           expect(stats.gid).to.be.equal(200);
           return done();
@@ -154,8 +199,8 @@
         });
       });
       return it('should change uid and  gid', function(done) {
-        fs.mkdirSync('/var/www');
-        return fs.open('/var/www', 'r', function(err, fd) {
+        fs.mkdirSync('c:\\xampp\\htdocs');
+        return fs.open('c:\\xampp\\htdocs', 'r', function(err, fd) {
           return fs.fchown(fd, 300, 400, function() {
             var stats;
             stats = fs.fstatSync(fd);
@@ -168,26 +213,26 @@
     });
     describe('#lchown()', function() {
       it('should return an error if path does not exists', function(done) {
-        return fs.lchown('/var/www/index.php', 200, 200, function(err) {
+        return fs.lchown('c:\\xampp\\htdocs\\index.php', 200, 200, function(err) {
           expect(err).to.be.an["instanceof"](Error);
-          expect(err.message).to.be.equal("File or directory '/var/www/index.php' does not exists.");
+          expect(err.message).to.be.equal("File or directory 'c:\\xampp\\htdocs\\index.php' does not exists.");
           return done();
         });
       });
       it('should return an error if path is not symlink', function(done) {
-        fs.writeFileSync('/var/www/index.php', '');
-        return fs.lchown('/var/www/index.php', 200, 200, function(err) {
+        fs.writeFileSync('c:\\xampp\\htdocs\\index.php', '');
+        return fs.lchown('c:\\xampp\\htdocs\\index.php', 200, 200, function(err) {
           expect(err).to.be.an["instanceof"](Error);
-          expect(err.message).to.be.equal("Path '/var/www/index.php' is not a symbolic link.");
+          expect(err.message).to.be.equal("Path 'c:\\xampp\\htdocs\\index.php' is not a symbolic link.");
           return done();
         });
       });
       return it('should change uid and gid of symlink', function(done) {
-        fs.writeFileSync('/var/www/index.php', '');
-        fs.symlinkSync('/var/www/index.php', '/var/www/default.php');
-        return fs.lchown('/var/www/default.php', 500, 600, function() {
+        fs.writeFileSync('c:\\xampp\\htdocs\\index.php', '');
+        fs.symlinkSync('c:\\xampp\\htdocs\\index.php', 'c:\\xampp\\htdocs\\default.php');
+        return fs.lchown('c:\\xampp\\htdocs\\default.php', 500, 600, function() {
           var stats;
-          stats = fs.lstatSync('/var/www/default.php');
+          stats = fs.lstatSync('c:\\xampp\\htdocs\\default.php');
           expect(stats.uid).to.be.equal(500);
           expect(stats.gid).to.be.equal(600);
           return done();
@@ -196,16 +241,16 @@
     });
     describe('#chmod()', function() {
       it('should return an error if path does not exists', function(done) {
-        return fs.chmod('/var/www', 777, function(err) {
+        return fs.chmod('c:\\xampp\\htdocs', 777, function(err) {
           expect(err).to.be.an["instanceof"](Error);
-          expect(err.message).to.be.equal("File or directory '/var/www' does not exists.");
+          expect(err.message).to.be.equal("File or directory 'c:\\xampp\\htdocs' does not exists.");
           return done();
         });
       });
       return it('should change mode', function(done) {
-        fs.mkdirSync('/var/www');
-        return fs.chmod('/var/www', 777, function() {
-          expect(fs.statSync('/var/www').mode).to.be.equal(777);
+        fs.mkdirSync('c:\\xampp\\htdocs');
+        return fs.chmod('c:\\xampp\\htdocs', 777, function() {
+          expect(fs.statSync('c:\\xampp\\htdocs').mode).to.be.equal(777);
           return done();
         });
       });
@@ -219,8 +264,8 @@
         });
       });
       return it('should change mode', function(done) {
-        fs.writeFileSync('/var/www/index.php', '');
-        return fs.open('/var/www/index.php', 'r', function(err, fd) {
+        fs.writeFileSync('c:\\xampp\\htdocs\\index.php', '');
+        return fs.open('c:\\xampp\\htdocs\\index.php', 'r', function(err, fd) {
           return fs.fchmod(fd, 777, function() {
             expect(fs.fstatSync(fd).mode).to.be.equal(777);
             return done();
@@ -230,40 +275,40 @@
     });
     describe('#lchmod()', function() {
       it('should return an error if path does not exists', function(done) {
-        return fs.lchmod('/var/www', 777, function(err) {
+        return fs.lchmod('c:\\xampp\\htdocs', 777, function(err) {
           expect(err).to.be.an["instanceof"](Error);
-          expect(err.message).to.be.equal("File or directory '/var/www' does not exists.");
+          expect(err.message).to.be.equal("File or directory 'c:\\xampp\\htdocs' does not exists.");
           return done();
         });
       });
       it('should return an error if path is not symlink', function(done) {
-        fs.mkdirSync('/var/www');
-        return fs.lchmod('/var/www', 777, function(err) {
+        fs.mkdirSync('c:\\xampp\\htdocs');
+        return fs.lchmod('c:\\xampp\\htdocs', 777, function(err) {
           expect(err).to.be.an["instanceof"](Error);
-          expect(err.message).to.be.equal("Path '/var/www' is not a symbolic link.");
+          expect(err.message).to.be.equal("Path 'c:\\xampp\\htdocs' is not a symbolic link.");
           return done();
         });
       });
       return it('should change mode of symlink', function(done) {
-        fs.writeFileSync('/var/www/index.php', '');
-        fs.symlinkSync('/var/www/index.php', '/var/www/default.php');
-        return fs.lchmod('/var/www/default.php', 777, function() {
-          expect(fs.lstatSync('/var/www/default.php').mode).to.be.equal(777);
+        fs.writeFileSync('c:\\xampp\\htdocs\\index.php', '');
+        fs.symlinkSync('c:\\xampp\\htdocs\\index.php', 'c:\\xampp\\htdocs\\default.php');
+        return fs.lchmod('c:\\xampp\\htdocs\\default.php', 777, function() {
+          expect(fs.lstatSync('c:\\xampp\\htdocs\\default.php').mode).to.be.equal(777);
           return done();
         });
       });
     });
     describe('#stat()', function() {
       it('should return an error if path does not exists', function(done) {
-        return fs.stat('/var/www', function(err) {
+        return fs.stat('c:\\xampp\\htdocs', function(err) {
           expect(err).to.be.an["instanceof"](Error);
-          expect(err.message).to.be.equal("File or directory '/var/www' does not exists.");
+          expect(err.message).to.be.equal("File or directory 'c:\\xampp\\htdocs' does not exists.");
           return done();
         });
       });
       return it('should return stats object for path', function(done) {
-        fs.writeFileSync('/var/www/index.php', '');
-        return fs.stat('/var/www/index.php', function(err, stats) {
+        fs.writeFileSync('c:\\xampp\\htdocs\\index.php', '');
+        return fs.stat('c:\\xampp\\htdocs\\index.php', function(err, stats) {
           expect(stats).to.be.an["instanceof"](Stats);
           expect(stats.isFile()).to.be["true"];
           return done();
@@ -272,24 +317,24 @@
     });
     describe('#lstat()', function() {
       it('should return an error if path does not exists', function(done) {
-        return fs.lstat('/var/www', function(err) {
+        return fs.lstat('c:\\xampp\\htdocs', function(err) {
           expect(err).to.be.an["instanceof"](Error);
-          expect(err.message).to.be.equal("File or directory '/var/www' does not exists.");
+          expect(err.message).to.be.equal("File or directory 'c:\\xampp\\htdocs' does not exists.");
           return done();
         });
       });
       it('should return an error if path is not a symlink', function(done) {
-        fs.mkdirSync('/var/www');
-        return fs.lstat('/var/www', function(err) {
+        fs.mkdirSync('c:\\xampp\\htdocs');
+        return fs.lstat('c:\\xampp\\htdocs', function(err) {
           expect(err).to.be.an["instanceof"](Error);
-          expect(err.message).to.be.equal("Path '/var/www' is not a symbolic link.");
+          expect(err.message).to.be.equal("Path 'c:\\xampp\\htdocs' is not a symbolic link.");
           return done();
         });
       });
       return it('should return stats for symlink', function(done) {
-        fs.mkdirSync('/var/www');
-        fs.symlinkSync('/var/www', '/var/document_root');
-        return fs.lstat('/var/document_root', function(err, stats) {
+        fs.mkdirSync('c:\\xampp\\htdocs');
+        fs.symlinkSync('c:\\xampp\\htdocs', 'c:\\xampp\\document_root');
+        return fs.lstat('c:\\xampp\\document_root', function(err, stats) {
           expect(stats.isSymbolicLink()).to.be["true"];
           return done();
         });
@@ -304,11 +349,11 @@
         });
       });
       return it('should return stat object', function(done) {
-        fs.writeFileSync('/var/www/index.php', '');
-        return fs.open('/var/www/index.php', 'r', function(err, fd) {
+        fs.writeFileSync('c:\\xampp\\htdocs\\index.php', '');
+        return fs.open('c:\\xampp\\htdocs\\index.php', 'r', function(err, fd) {
           return fs.fstat(fd, function(err, stats) {
             expect(stats).to.be.an["instanceof"](Stats);
-            expect(stats._path).to.be.equal('/var/www/index.php');
+            expect(stats._path).to.be.equal('c:\\xampp\\htdocs\\index.php');
             return done();
           });
         });
@@ -316,198 +361,200 @@
     });
     describe('#link()', function() {
       it('should return an error if source path does not exists', function(done) {
-        return fs.link('/var/www/index.php', '/var/www/default.php', function(err) {
+        return fs.link('c:\\xampp\\htdocs\\index.php', 'c:\\xampp\\htdocs\\default.php', function(err) {
           expect(err).to.be.an["instanceof"](Error);
-          expect(err.message).to.be.equal("File or directory '/var/www/index.php' does not exists.");
+          expect(err.message).to.be.equal("File or directory 'c:\\xampp\\htdocs\\index.php' does not exists.");
           return done();
         });
       });
       return it('should create link to file', function(done) {
-        fs.writeFileSync('/var/www/index.php', '');
-        return fs.link('/var/www/index.php', '/var/www/default.php', function() {
-          expect(fs.existsSync('/var/www/default.php')).to.be["true"];
-          expect(fs.statSync('/var/www/default.php').isFile()).to.be["true"];
+        fs.writeFileSync('c:\\xampp\\htdocs\\index.php', '');
+        return fs.link('c:\\xampp\\htdocs\\index.php', 'c:\\xampp\\htdocs\\default.php', function() {
+          expect(fs.existsSync('c:\\xampp\\htdocs\\default.php')).to.be["true"];
+          expect(fs.statSync('c:\\xampp\\htdocs\\default.php').isFile()).to.be["true"];
           return done();
         });
       });
     });
     describe('#symlink()', function() {
       it('should return an error if source path does not exists', function(done) {
-        return fs.symlink('/var/www/index.php', '/var/www/default.php', function(err) {
+        return fs.symlink('c:\\xampp\\htdocs\\index.php', 'c:\\xampp\\htdocs\\default.php', function(err) {
           expect(err).to.be.an["instanceof"](Error);
-          expect(err.message).to.be.equal("File or directory '/var/www/index.php' does not exists.");
+          expect(err.message).to.be.equal("File or directory 'c:\\xampp\\htdocs\\index.php' does not exists.");
           return done();
         });
       });
       return it('should create link to file', function(done) {
-        fs.writeFileSync('/var/www/index.php', '');
-        return fs.symlink('/var/www/index.php', '/var/www/default.php', function() {
-          expect(fs.existsSync('/var/www/default.php')).to.be["true"];
+        fs.writeFileSync('c:\\xampp\\htdocs\\index.php', '');
+        return fs.symlink('c:\\xampp\\htdocs\\index.php', 'c:\\xampp\\htdocs\\default.php', function() {
+          expect(fs.existsSync('c:\\xampp\\htdocs\\default.php')).to.be["true"];
           return done();
         });
       });
     });
     describe('#readlink()', function() {
       it('should return an error if source path does not exists', function(done) {
-        return fs.readlink('/var/www/default.php', function(err) {
+        return fs.readlink('c:\\xampp\\htdocs\\default.php', function(err) {
           expect(err).to.be.an["instanceof"](Error);
-          expect(err.message).to.be.equal("File or directory '/var/www/default.php' does not exists.");
+          expect(err.message).to.be.equal("File or directory 'c:\\xampp\\htdocs\\default.php' does not exists.");
           return done();
         });
       });
       it('should get path of hard link', function(done) {
-        fs.writeFileSync('/var/www/index.php', '');
-        return fs.link('/var/www/index.php', '/var/www/default.php', function() {
-          return fs.readlink('/var/www/../../var/www/something/../default.php', function(err, path) {
-            expect(path).to.be.equal('/var/www/default.php');
+        fs.writeFileSync('c:\\xampp\\htdocs\\index.php', '');
+        return fs.link('c:\\xampp\\htdocs\\index.php', 'c:\\xampp\\htdocs\\default.php', function() {
+          return fs.readlink('c:\\xampp\\htdocs\\..\\..\\xampp\\htdocs\\something\\..\\default.php', function(err, path) {
+            expect(path).to.be.equal('c:\\xampp\\htdocs\\default.php');
             return done();
           });
         });
       });
       it('should get path to source file of symlink', function(done) {
-        fs.writeFileSync('/var/www/index.php', '');
-        return fs.symlink('/var/www/index.php', '/var/www/default.php', function() {
-          return fs.readlink('/var/www/../../var/www/something/../default.php', function(err, path) {
-            expect(path).to.be.equal('/var/www/index.php');
+        fs.writeFileSync('c:\\xampp\\htdocs\\index.php', '');
+        return fs.symlink('c:\\xampp\\htdocs\\index.php', 'c:\\xampp\\htdocs\\default.php', function() {
+          return fs.readlink('c:\\xampp\\htdocs\\..\\..\\xampp\\htdocs\\something\\..\\default.php', function(err, path) {
+            expect(path).to.be.equal('c:\\xampp\\htdocs\\index.php');
             return done();
           });
         });
       });
       return it('should get normalized path to file if it is not link', function(done) {
-        fs.writeFileSync('/var/www/index.php', '');
-        return fs.readlink('/var/www/../../var/www/something/../index.php', function(err, path) {
-          expect(path).to.be.equal('/var/www/index.php');
+        fs.writeFileSync('c:\\xampp\\htdocs\\index.php', '');
+        return fs.readlink('c:\\xampp\\htdocs\\..\\..\\xampp\\htdocs\\something\\..\\index.php', function(err, path) {
+          expect(path).to.be.equal('c:\\xampp\\htdocs\\index.php');
           return done();
         });
       });
     });
     describe('#realpath()', function() {
       it('should return an error if path does not exists', function(done) {
-        return fs.realpath('/var/www', function(err) {
+        return fs.realpath('c:\\xampp\\htdocs', function(err) {
           expect(err).to.be.an["instanceof"](Error);
-          expect(err.message).to.be.equal("File or directory '/var/www' does not exists.");
+          expect(err.message).to.be.equal("File or directory 'c:\\xampp\\htdocs' does not exists.");
           return done();
         });
       });
       it('should load realpath from cache object', function(done) {
-        return fs.realpath('/var/www', {
-          '/var/www': '/var/data/www'
+        return fs.realpath('c:\\xampp\\htdocs', {
+          'c:\\xampp\\htdocs': 'c:\\xampp\\data\\www'
         }, function(err, resolvedPath) {
-          expect(resolvedPath).to.be.equal('/var/data/www');
+          expect(resolvedPath).to.be.equal('c:\\xampp\\data\\www');
           return done();
         });
       });
       return it('should return resolved realpath', function(done) {
-        fs.writeFileSync('/var/www/index.php', '');
-        return fs.realpath('/var/www/data/../../www/index.php', function(err, resolvedPath) {
-          expect(resolvedPath).to.be.equal('/var/www/index.php');
+        fs.writeFileSync('c:\\xampp\\htdocs\\index.php', '');
+        return fs.realpath('c:\\xampp\\htdocs\\data\\..\\..\\htdocs\\index.php', function(err, resolvedPath) {
+          expect(resolvedPath).to.be.equal('c:\\xampp\\htdocs\\index.php');
           return done();
         });
       });
     });
     describe('#unlink()', function() {
       it('should return an error if path does not exists', function(done) {
-        return fs.unlink('/var/www/index.php', function(err) {
+        return fs.unlink('c:\\xampp\\htdocs\\index.php', function(err) {
           expect(err).to.be.an["instanceof"](Error);
-          expect(err.message).to.be.equal("File or directory '/var/www/index.php' does not exists.");
+          expect(err.message).to.be.equal("File or directory 'c:\\xampp\\htdocs\\index.php' does not exists.");
           return done();
         });
       });
       it('should return an error if path is not file', function(done) {
-        fs.mkdirSync('/var/www');
-        return fs.unlink('/var/www', function(err) {
+        fs.mkdirSync('c:\\xampp\\htdocs');
+        return fs.unlink('c:\\xampp\\htdocs', function(err) {
           expect(err).to.be.an["instanceof"](Error);
-          expect(err.message).to.be.equal("Path '/var/www' is not a file.");
+          expect(err.message).to.be.equal("Path 'c:\\xampp\\htdocs' is not a file.");
           return done();
         });
       });
       return it('should remove file', function(done) {
-        fs.writeFileSync('/var/www/index.php', '');
-        return fs.unlink('/var/www/index.php', function() {
-          expect(fs._data).to.have.keys(['/', '/var/www', '/var']);
+        fs.writeFileSync('c:\\xampp\\htdocs\\index.php', '');
+        return fs.unlink('c:\\xampp\\htdocs\\index.php', function() {
+          expect(fs._data).to.have.keys(['c:', 'c:\\xampp\\htdocs', 'c:\\xampp']);
           return done();
         });
       });
     });
     describe('#rmdir()', function() {
       it('should return an error if path does not exists', function(done) {
-        return fs.rmdir('/var/www', function(err) {
+        return fs.rmdir('c:\\xampp\\htdocs', function(err) {
           expect(err).to.be.an["instanceof"](Error);
-          expect(err.message).to.be.equal("File or directory '/var/www' does not exists.");
+          expect(err.message).to.be.equal("File or directory 'c:\\xampp\\htdocs' does not exists.");
           return done();
         });
       });
       it('should return an error if path is not directory', function(done) {
-        fs.writeFileSync('/var/www/index.php', '');
-        return fs.rmdir('/var/www/index.php', function(err) {
+        fs.writeFileSync('c:\\xampp\\htdocs\\index.php', '');
+        return fs.rmdir('c:\\xampp\\htdocs\\index.php', function(err) {
           expect(err).to.be.an["instanceof"](Error);
-          expect(err.message).to.be.equal("Path '/var/www/index.php' is not a directory.");
+          expect(err.message).to.be.equal("Path 'c:\\xampp\\htdocs\\index.php' is not a directory.");
           return done();
         });
       });
       it('should return an error if directory is not empty', function(done) {
-        fs.mkdirSync('/var/www');
-        fs.writeFileSync('/var/www/index.php', '');
-        return fs.rmdir('/var/www', function(err) {
+        fs.mkdirSync('c:\\xampp\\htdocs');
+        fs.writeFileSync('c:\\xampp\\htdocs\\index.php', '');
+        return fs.rmdir('c:\\xampp\\htdocs', function(err) {
           expect(err).to.be.an["instanceof"](Error);
-          expect(err.message).to.be.equal("Directory '/var/www' is not empty.");
+          expect(err.message).to.be.equal("Directory 'c:\\xampp\\htdocs' is not empty.");
           return done();
         });
       });
       return it('should remove directory', function(done) {
-        fs.mkdirSync('/var/www');
-        return fs.rmdir('/var/www', function() {
-          expect(fs._data).to.have.keys(['/', '/var']);
+        fs.mkdirSync('c:\\xampp\\htdocs');
+        return fs.rmdir('c:\\xampp\\htdocs', function() {
+          expect(fs._data).to.have.keys(['c:', 'c:\\xampp']);
           return done();
         });
       });
     });
     describe('#mkdir()', function() {
       it('should return an error if path already exists', function(done) {
-        fs.mkdirSync('/var/www');
-        return fs.mkdir('/var/www', function(err) {
+        fs.mkdirSync('c:\\xampp\\htdocs');
+        return fs.mkdir('c:\\xampp\\htdocs', function(err) {
           expect(err).to.be.an["instanceof"](Error);
-          expect(err.message).to.be.equal("File or directory '/var/www' already exists.");
+          expect(err.message).to.be.equal("File or directory 'c:\\xampp\\htdocs' already exists.");
           return done();
         });
       });
       return it('should create new directory', function(done) {
-        return fs.mkdir('/var/www', function() {
-          expect(fs._data).to.have.keys(['/', '/var', '/var/www']);
+        return fs.mkdir('c:\\xampp\\htdocs', function() {
+          expect(fs._data).to.have.keys(['c:', 'c:\\xampp', 'c:\\xampp\\htdocs']);
           return done();
         });
       });
     });
     describe('#readdir()', function() {
       it('should return an error if path does not exists', function(done) {
-        return fs.readdir('/var/www', function(err) {
+        return fs.readdir('c:\\xampp\\htdocs', function(err) {
           expect(err).to.be.an["instanceof"](Error);
-          expect(err.message).to.be.equal("File or directory '/var/www' does not exists.");
+          expect(err.message).to.be.equal("File or directory 'c:\\xampp\\htdocs' does not exists.");
           return done();
         });
       });
       it('should throw an error if path is not directory', function(done) {
-        fs.writeFileSync('/var/www/index.php', '');
-        return fs.readdir('/var/www/index.php', function(err) {
+        fs.writeFileSync('c:\\xampp\\htdocs\\index.php', '');
+        return fs.readdir('c:\\xampp\\htdocs\\index.php', function(err) {
           expect(err).to.be.an["instanceof"](Error);
-          expect(err.message).to.be.equal("Path '/var/www/index.php' is not a directory.");
+          expect(err.message).to.be.equal("Path 'c:\\xampp\\htdocs\\index.php' is not a directory.");
           return done();
         });
       });
       return it('should load all files and directories from directory', function(done) {
         fs = new FS({
-          '/var/www': {
+          'xampp\\htdocs': {
             'index.php': '',
             'project': {
               'school': {}
             }
           },
-          '/home/david': {}
+          'Users\\david': {}
+        }, {
+          windows: true
         });
-        return fs.readdir('/var/www', function(err, files) {
+        return fs.readdir('c:\\xampp\\htdocs', function(err, files) {
           expect(files).to.be.eql(['index.php', 'project']);
-          expect(fs.statSync('/var/www/index.php').isFile()).to.be["true"];
-          expect(fs.statSync('/var/www/project').isDirectory()).to.be["true"];
+          expect(fs.statSync('c:\\xampp\\htdocs\\index.php').isFile()).to.be["true"];
+          expect(fs.statSync('c:\\xampp\\htdocs\\project').isDirectory()).to.be["true"];
           return done();
         });
       });
@@ -522,8 +569,8 @@
       });
       return it('should close opened file', function(done) {
         var fd;
-        fs.writeFileSync('/var/www/index.php', '');
-        fd = fs.openSync('/var/www/index.php', 'r');
+        fs.writeFileSync('c:\\xampp\\htdocs\\index.php', '');
+        fd = fs.openSync('c:\\xampp\\htdocs\\index.php', 'r');
         return fs.close(fd, function() {
           expect(fs._fileDescriptors).to.be.eql([]);
           return done();
@@ -532,71 +579,71 @@
     });
     describe('#open()', function() {
       it('should return an error if file does not exists (flag: r)', function(done) {
-        return fs.open('/var/www/index.php', 'r', function(err) {
+        return fs.open('c:\\xampp\\htdocs\\index.php', 'r', function(err) {
           expect(err).to.be.an["instanceof"](Error);
-          expect(err.message).to.be.equal("File or directory '/var/www/index.php' does not exists.");
+          expect(err.message).to.be.equal("File or directory 'c:\\xampp\\htdocs\\index.php' does not exists.");
           return done();
         });
       });
       it('should return an error if file does not exists (flag: r+)', function(done) {
-        return fs.open('/var/www/index.php', 'r+', function(err) {
+        return fs.open('c:\\xampp\\htdocs\\index.php', 'r+', function(err) {
           expect(err).to.be.an["instanceof"](Error);
-          expect(err.message).to.be.equal("File or directory '/var/www/index.php' does not exists.");
+          expect(err.message).to.be.equal("File or directory 'c:\\xampp\\htdocs\\index.php' does not exists.");
           return done();
         });
       });
       it('should return an error if file already exists (flag: wx)', function(done) {
-        fs.writeFileSync('/var/www/index.php', '');
-        return fs.open('/var/www/index.php', 'wx', function(err) {
+        fs.writeFileSync('c:\\xampp\\htdocs\\index.php', '');
+        return fs.open('c:\\xampp\\htdocs\\index.php', 'wx', function(err) {
           expect(err).to.be.an["instanceof"](Error);
-          expect(err.message).to.be.equal("File or directory '/var/www/index.php' already exists.");
+          expect(err.message).to.be.equal("File or directory 'c:\\xampp\\htdocs\\index.php' already exists.");
           return done();
         });
       });
       it('should return an error if file already exists (flag: wx+)', function(done) {
-        fs.writeFileSync('/var/www/index.php', '');
-        return fs.open('/var/www/index.php', 'wx+', function(err) {
+        fs.writeFileSync('c:\\xampp\\htdocs\\index.php', '');
+        return fs.open('c:\\xampp\\htdocs\\index.php', 'wx+', function(err) {
           expect(err).to.be.an["instanceof"](Error);
-          expect(err.message).to.be.equal("File or directory '/var/www/index.php' already exists.");
+          expect(err.message).to.be.equal("File or directory 'c:\\xampp\\htdocs\\index.php' already exists.");
           return done();
         });
       });
       it('should return an error if file already exists (flag: ax)', function(done) {
-        fs.writeFileSync('/var/www/index.php', '');
-        return fs.open('/var/www/index.php', 'ax', function(err) {
+        fs.writeFileSync('c:\\xampp\\htdocs\\index.php', '');
+        return fs.open('c:\\xampp\\htdocs\\index.php', 'ax', function(err) {
           expect(err).to.be.an["instanceof"](Error);
-          expect(err.message).to.be.equal("File or directory '/var/www/index.php' already exists.");
+          expect(err.message).to.be.equal("File or directory 'c:\\xampp\\htdocs\\index.php' already exists.");
           return done();
         });
       });
       it('should return an error if file already exists (flag: ax+)', function(done) {
-        fs.writeFileSync('/var/www/index.php', '');
-        return fs.open('/var/www/index.php', 'ax+', function(err) {
+        fs.writeFileSync('c:\\xampp\\htdocs\\index.php', '');
+        return fs.open('c:\\xampp\\htdocs\\index.php', 'ax+', function(err) {
           expect(err).to.be.an["instanceof"](Error);
-          expect(err.message).to.be.equal("File or directory '/var/www/index.php' already exists.");
+          expect(err.message).to.be.equal("File or directory 'c:\\xampp\\htdocs\\index.php' already exists.");
           return done();
         });
       });
       it('should create new file if it does not exists (flag: w)', function(done) {
-        return fs.open('/var/www/index.php', 'w', function(err, fd) {
+        return fs.open('c:\\xampp\\htdocs\\index.php', 'w', function(err, fd) {
           expect(fs.fstatSync(fd).isFile()).to.be["true"];
           return done();
         });
       });
       it('should create new file if it does not exists (flag: w+)', function(done) {
-        return fs.open('/var/www/index.php', 'w+', function(err, fd) {
+        return fs.open('c:\\xampp\\htdocs\\index.php', 'w+', function(err, fd) {
           expect(fs.fstatSync(fd).isFile()).to.be["true"];
           return done();
         });
       });
       it('should create new file if it does not exists (flag: a)', function(done) {
-        return fs.open('/var/www/index.php', 'a', function(err, fd) {
+        return fs.open('c:\\xampp\\htdocs\\index.php', 'a', function(err, fd) {
           expect(fs.fstatSync(fd).isFile()).to.be["true"];
           return done();
         });
       });
       return it('should create new file if it does not exists (flag: a+)', function(done) {
-        return fs.open('/var/www/index.php', 'a+', function(err, fd) {
+        return fs.open('c:\\xampp\\htdocs\\index.php', 'a+', function(err, fd) {
           expect(fs.fstatSync(fd).isFile()).to.be["true"];
           return done();
         });
@@ -605,13 +652,13 @@
     describe('#utimes()', function() {
       return it('shoul change atime and mtime', function(done) {
         var atime, mtime;
-        fs.writeFileSync('/var/www/index.php', '');
-        atime = fs.statSync('/var/www/index.php').atime;
-        mtime = fs.statSync('/var/www/index.php').mtime;
+        fs.writeFileSync('c:\\xampp\\htdocs\\index.php', '');
+        atime = fs.statSync('c:\\xampp\\htdocs\\index.php').atime;
+        mtime = fs.statSync('c:\\xampp\\htdocs\\index.php').mtime;
         return setTimeout(function() {
-          return fs.utimes('/var/www/index.php', new Date, new Date, function() {
-            expect(fs.statSync('/var/www/index.php').atime.getTime()).not.to.be.equal(atime.getTime());
-            expect(fs.statSync('/var/www/index.php').mtime.getTime()).not.to.be.equal(mtime.getTime());
+          return fs.utimes('c:\\xampp\\htdocs\\index.php', new Date, new Date, function() {
+            expect(fs.statSync('c:\\xampp\\htdocs\\index.php').atime.getTime()).not.to.be.equal(atime.getTime());
+            expect(fs.statSync('c:\\xampp\\htdocs\\index.php').mtime.getTime()).not.to.be.equal(mtime.getTime());
             return done();
           });
         }, 100);
@@ -626,8 +673,8 @@
         });
       });
       return it('should change atime and mtime', function(done) {
-        fs.mkdirSync('/var/www');
-        return fs.open('/var/www', 'r', function(err, fd) {
+        fs.mkdirSync('c:\\xampp\\htdocs');
+        return fs.open('c:\\xampp\\htdocs', 'r', function(err, fd) {
           var atime, mtime;
           atime = fs.fstatSync(fd).atime;
           mtime = fs.fstatSync(fd).mtime;
@@ -659,20 +706,20 @@
         });
       });
       it('should return an error if file is not open for writing', function(done) {
-        fs.writeFileSync('/var/www/index.php', '');
-        return fs.open('/var/www/index.php', 'r', function(err, fd) {
+        fs.writeFileSync('c:\\xampp\\htdocs\\index.php', '');
+        return fs.open('c:\\xampp\\htdocs\\index.php', 'r', function(err, fd) {
           return fs.write(fd, new Buffer(''), 0, 0, 0, function(err) {
             expect(err).to.be.an["instanceof"](Error);
-            expect(err.message).to.be.equal("File '/var/www/index.php' is not open for writing.");
+            expect(err.message).to.be.equal("File 'c:\\xampp\\htdocs\\index.php' is not open for writing.");
             return done();
           });
         });
       });
       it('should write data to file', function(done) {
-        fs.writeFileSync('/var/www/index.php', 'hello word');
-        return fs.open('/var/www/index.php', 'w', function(err, fd) {
+        fs.writeFileSync('c:\\xampp\\htdocs\\index.php', 'hello word');
+        return fs.open('c:\\xampp\\htdocs\\index.php', 'w', function(err, fd) {
           return fs.write(fd, new Buffer('hello'), 0, 5, null, function() {
-            expect(fs.readFileSync('/var/www/index.php', {
+            expect(fs.readFileSync('c:\\xampp\\htdocs\\index.php', {
               encoding: 'utf8'
             })).to.be.equal('hello');
             return done();
@@ -680,10 +727,10 @@
         });
       });
       return it('should write data to exact position in file', function(done) {
-        fs.writeFileSync('/var/www/index.php', 'helloword');
-        return fs.open('/var/www/index.php', 'w', function(err, fd) {
+        fs.writeFileSync('c:\\xampp\\htdocs\\index.php', 'helloword');
+        return fs.open('c:\\xampp\\htdocs\\index.php', 'w', function(err, fd) {
           return fs.write(fd, new Buffer(' '), 0, 1, 5, function() {
-            expect(fs.readFileSync('/var/www/index.php', {
+            expect(fs.readFileSync('c:\\xampp\\htdocs\\index.php', {
               encoding: 'utf8'
             })).to.be.equal('hello word');
             return done();
@@ -700,18 +747,18 @@
         });
       });
       it('should return an error if file is not open for reading', function(done) {
-        fs.writeFileSync('/var/www/index.php', '');
-        return fs.open('/var/www/index.php', 'w', function(err, fd) {
+        fs.writeFileSync('c:\\xampp\\htdocs\\index.php', '');
+        return fs.open('c:\\xampp\\htdocs\\index.php', 'w', function(err, fd) {
           return fs.read(fd, new Buffer(1), 0, 1, null, function(err) {
             expect(err).to.be.an["instanceof"](Error);
-            expect(err.message).to.be.equal("File '/var/www/index.php' is not open for reading.");
+            expect(err.message).to.be.equal("File 'c:\\xampp\\htdocs\\index.php' is not open for reading.");
             return done();
           });
         });
       });
       it('should read all data', function(done) {
-        fs.writeFileSync('/var/www/index.php', 'hello word');
-        return fs.open('/var/www/index.php', 'r', function(err, fd) {
+        fs.writeFileSync('c:\\xampp\\htdocs\\index.php', 'hello word');
+        return fs.open('c:\\xampp\\htdocs\\index.php', 'r', function(err, fd) {
           var buffer, size;
           size = fs.fstatSync(fd).size;
           buffer = new Buffer(size);
@@ -724,8 +771,8 @@
         });
       });
       return it('should read all data byte by byte', function(done) {
-        fs.writeFileSync('/var/www/index.php', 'hello word');
-        return fs.open('/var/www/index.php', 'r', function(err, fd) {
+        fs.writeFileSync('c:\\xampp\\htdocs\\index.php', 'hello word');
+        return fs.open('c:\\xampp\\htdocs\\index.php', 'r', function(err, fd) {
           var buffer, bytesRead, size;
           size = fs.fstatSync(fd).size;
           buffer = new Buffer(size);
@@ -741,25 +788,25 @@
     });
     describe('#readFile()', function() {
       it('should return an error if path does not exists', function(done) {
-        return fs.readFile('/var/www/index.php', function(err) {
+        return fs.readFile('c:\\xampp\\htdocs\\index.php', function(err) {
           expect(err).to.be.an["instanceof"](Error);
-          expect(err.message).to.be.equal("File or directory '/var/www/index.php' does not exists.");
+          expect(err.message).to.be.equal("File or directory 'c:\\xampp\\htdocs\\index.php' does not exists.");
           return done();
         });
       });
       it('should throw an error if path is not file', function(done) {
-        fs.mkdirSync('/var/www');
-        return fs.readFile('/var/www', function(err) {
+        fs.mkdirSync('c:\\xampp\\htdocs');
+        return fs.readFile('c:\\xampp\\htdocs', function(err) {
           expect(err).to.be.an["instanceof"](Error);
-          expect(err.message).to.be.equal("Path '/var/www' is not a file.");
+          expect(err.message).to.be.equal("Path 'c:\\xampp\\htdocs' is not a file.");
           return done();
         });
       });
       it('should read data from file as buffer', function(done) {
         var s;
         s = '<?php echo "hello";';
-        fs.writeFileSync('/var/www/index.php', s);
-        return fs.readFile('/var/www/index.php', function(err, data) {
+        fs.writeFileSync('c:\\xampp\\htdocs\\index.php', s);
+        return fs.readFile('c:\\xampp\\htdocs\\index.php', function(err, data) {
           expect(data).to.be.an["instanceof"](Buffer);
           expect(data.toString('utf8')).to.be.equal(s);
           return done();
@@ -768,8 +815,8 @@
       return it('should read data from file as string', function(done) {
         var s;
         s = '<?php echo "hello";';
-        fs.writeFileSync('/var/www/index.php', s);
-        return fs.readFile('/var/www/index.php', {
+        fs.writeFileSync('c:\\xampp\\htdocs\\index.php', s);
+        return fs.readFile('c:\\xampp\\htdocs\\index.php', {
           encoding: 'utf8'
         }, function(err, data) {
           expect(data).to.be.equal(s);
@@ -779,16 +826,16 @@
     });
     describe('#writeFile()', function() {
       it('should create new file', function(done) {
-        return fs.writeFile('/var/www/index.php', '', function() {
-          expect(fs._data).to.have.keys(['/', '/var/www/index.php', '/var/www', '/var']);
-          expect(fs.statSync('/var/www/index.php').isFile()).to.be["true"];
+        return fs.writeFile('c:\\xampp\\htdocs\\index.php', '', function() {
+          expect(fs._data).to.have.keys(['c:', 'c:\\xampp\\htdocs\\index.php', 'c:\\xampp\\htdocs', 'c:\\xampp']);
+          expect(fs.statSync('c:\\xampp\\htdocs\\index.php').isFile()).to.be["true"];
           return done();
         });
       });
       return it('should rewrite old file', function(done) {
-        fs.writeFileSync('/var/www/index.php', 'old');
-        return fs.writeFile('/var/www/index.php', 'new', function() {
-          expect(fs.readFileSync('/var/www/index.php', {
+        fs.writeFileSync('c:\\xampp\\htdocs\\index.php', 'old');
+        return fs.writeFile('c:\\xampp\\htdocs\\index.php', 'new', function() {
+          expect(fs.readFileSync('c:\\xampp\\htdocs\\index.php', {
             encoding: 'utf8'
           })).to.be.equal('new');
           return done();
@@ -797,25 +844,25 @@
     });
     describe('#appendFile()', function() {
       it('should return an error if path is not file', function(done) {
-        fs.mkdirSync('/var/www');
-        return fs.appendFile('/var/www', '', function(err) {
+        fs.mkdirSync('c:\\xampp\\htdocs');
+        return fs.appendFile('c:\\xampp\\htdocs', '', function(err) {
           expect(err).to.be.an["instanceof"](Error);
-          expect(err.message).to.be.equal("Path '/var/www' is not a file.");
+          expect(err.message).to.be.equal("Path 'c:\\xampp\\htdocs' is not a file.");
           return done();
         });
       });
       it('should create new file', function(done) {
-        return fs.appendFile('/var/www/index.php', 'hello', function(err) {
-          expect(fs.readFileSync('/var/www/index.php', {
+        return fs.appendFile('c:\\xampp\\htdocs\\index.php', 'hello', function(err) {
+          expect(fs.readFileSync('c:\\xampp\\htdocs\\index.php', {
             encoding: 'utf8'
           })).to.be.equal('hello');
           return done();
         });
       });
       return it('should append data to file with buffer', function(done) {
-        fs.writeFileSync('/var/www/index.php', 'one');
-        return fs.appendFile('/var/www/index.php', new Buffer(', two'), function() {
-          expect(fs.readFileSync('/var/www/index.php', {
+        fs.writeFileSync('c:\\xampp\\htdocs\\index.php', 'one');
+        return fs.appendFile('c:\\xampp\\htdocs\\index.php', new Buffer(', two'), function() {
+          expect(fs.readFileSync('c:\\xampp\\htdocs\\index.php', {
             encoding: 'utf8'
           })).to.be.equal('one, two');
           return done();
@@ -825,48 +872,48 @@
     describe('#watch()', function() {
       it('should throw an error if path does not exists', function() {
         return expect(function() {
-          return fs.watch('/var/www');
-        }).to["throw"](Error, "File or directory '/var/www' does not exists.");
+          return fs.watch('c:\\xampp\\htdocs');
+        }).to["throw"](Error, "File or directory 'c:\\xampp\\htdocs' does not exists.");
       });
       it('should call listener when attributes were changed', function(done) {
-        fs.writeFileSync('/var/www/index.php', '');
-        fs.watch('/var/www/index.php', function(event, filename) {
+        fs.writeFileSync('c:\\xampp\\htdocs\\index.php', '');
+        fs.watch('c:\\xampp\\htdocs\\index.php', function(event, filename) {
           expect(event).to.be.equal('change');
-          expect(filename).to.be.equal('/var/www/index.php');
+          expect(filename).to.be.equal('c:\\xampp\\htdocs\\index.php');
           return done();
         });
-        return fs.utimesSync('/var/www/index.php', new Date, new Date);
+        return fs.utimesSync('c:\\xampp\\htdocs\\index.php', new Date, new Date);
       });
       it('should call listener when file was renamed', function(done) {
-        fs.writeFileSync('/var/www/index.php', '');
-        fs.watch('/var/www/index.php', function(event, filename) {
+        fs.writeFileSync('c:\\xampp\\htdocs\\index.php', '');
+        fs.watch('c:\\xampp\\htdocs\\index.php', function(event, filename) {
           expect(event).to.be.equal('rename');
-          expect(filename).to.be.equal('/var/www/default.php');
+          expect(filename).to.be.equal('c:\\xampp\\htdocs\\default.php');
           return done();
         });
-        return fs.renameSync('/var/www/index.php', '/var/www/default.php');
+        return fs.renameSync('c:\\xampp\\htdocs\\index.php', 'c:\\xampp\\htdocs\\default.php');
       });
       it('should call listener when data was changed', function(done) {
-        fs.writeFileSync('/var/www/index.php', '');
-        fs.watch('/var/www/index.php', function(event, filename) {
+        fs.writeFileSync('c:\\xampp\\htdocs\\index.php', '');
+        fs.watch('c:\\xampp\\htdocs\\index.php', function(event, filename) {
           expect(event).to.be.equal('change');
-          expect(filename).to.be.equal('/var/www/index.php');
-          expect(fs.readFileSync('/var/www/index.php', {
+          expect(filename).to.be.equal('c:\\xampp\\htdocs\\index.php');
+          expect(fs.readFileSync('c:\\xampp\\htdocs\\index.php', {
             encoding: 'utf8'
           })).to.be.equal('hello word');
           return done();
         });
-        return fs.writeFileSync('/var/www/index.php', 'hello word');
+        return fs.writeFileSync('c:\\xampp\\htdocs\\index.php', 'hello word');
       });
       return it('should close watching', function(done) {
         var called, watcher;
-        fs.writeFileSync('/var/www/index.php', '');
+        fs.writeFileSync('c:\\xampp\\htdocs\\index.php', '');
         called = false;
-        watcher = fs.watch('/var/www/index.php', function(event, filename) {
+        watcher = fs.watch('c:\\xampp\\htdocs\\index.php', function(event, filename) {
           return called = true;
         });
         watcher.close();
-        fs.utimesSync('/var/www/index.php', new Date, new Date);
+        fs.utimesSync('c:\\xampp\\htdocs\\index.php', new Date, new Date);
         return setTimeout(function() {
           expect(called).to.be["false"];
           return done();
@@ -875,14 +922,14 @@
     });
     describe('#exists()', function() {
       it('should return false when file does not exists', function(done) {
-        return fs.exists('/var/www/index.php', function(exists) {
+        return fs.exists('c:\\xampp\\htdocs\\index.php', function(exists) {
           expect(exists).to.be["false"];
           return done();
         });
       });
       return it('should return true when file exists', function(done) {
-        fs.writeFileSync('/var/www/index.php', '');
-        return fs.exists('/var/www/index.php', function(exists) {
+        fs.writeFileSync('c:\\xampp\\htdocs\\index.php', '');
+        return fs.exists('c:\\xampp\\htdocs\\index.php', function(exists) {
           expect(exists).to.be["true"];
           return done();
         });
@@ -891,13 +938,13 @@
     describe('#createReadStream()', function() {
       it('should return an error if file does not exists', function() {
         return expect(function() {
-          return fs.createReadStream('/var/www/index.php');
-        }).to["throw"](Error, "File or directory '/var/www/index.php' does not exists.");
+          return fs.createReadStream('c:\\xampp\\htdocs\\index.php');
+        }).to["throw"](Error, "File or directory 'c:\\xampp\\htdocs\\index.php' does not exists.");
       });
       it('should create readable stream', function(done) {
         var rs;
-        fs.writeFileSync('/var/www/index.php', 'hello word');
-        return rs = fs.createReadStream('/var/www/index.php').on('readable', function() {
+        fs.writeFileSync('c:\\xampp\\htdocs\\index.php', 'hello word');
+        return rs = fs.createReadStream('c:\\xampp\\htdocs\\index.php').on('readable', function() {
           var buf;
           buf = rs.read();
           if (buf !== null) {
@@ -909,8 +956,8 @@
       });
       return it('should create readable stream with start and end', function(done) {
         var rs;
-        fs.writeFileSync('/var/www/index.php', 'hello word');
-        return rs = fs.createReadStream('/var/www/index.php', {
+        fs.writeFileSync('c:\\xampp\\htdocs\\index.php', 'hello word');
+        return rs = fs.createReadStream('c:\\xampp\\htdocs\\index.php', {
           start: 6,
           end: 10
         }).on('readable', function() {
@@ -927,15 +974,15 @@
     return describe('#createWriteStream()', function() {
       it('should return an error if file does not exists', function() {
         return expect(function() {
-          return fs.createReadStream('/var/www/index.php');
-        }).to["throw"](Error, "File or directory '/var/www/index.php' does not exists.");
+          return fs.createReadStream('c:\\xampp\\htdocs\\index.php');
+        }).to["throw"](Error, "File or directory 'c:\\xampp\\htdocs\\index.php' does not exists.");
       });
       return it('should create writable stream', function(done) {
         var ws;
-        fs.writeFileSync('/var/www/index.php', '');
-        ws = fs.createWriteStream('/var/www/index.php');
+        fs.writeFileSync('c:\\xampp\\htdocs\\index.php', '');
+        ws = fs.createWriteStream('c:\\xampp\\htdocs\\index.php');
         ws.on('finish', function() {
-          expect(fs.readFileSync('/var/www/index.php', {
+          expect(fs.readFileSync('c:\\xampp\\htdocs\\index.php', {
             encoding: 'utf8'
           })).to.be.equal('hello word');
           return done();

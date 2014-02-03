@@ -1,8 +1,8 @@
 Stats = require './Stats'
 Errors = require './Errors'
 FSWatcher = require './FSWatcher'
+Helpers = require './Helpers'
 escape = require 'escape-regexp'
-_path = require 'path'
 Readable = require('stream').Readable
 Writable = require('stream').Writable
 
@@ -23,6 +23,17 @@ toDate = (time) ->
 class fs
 
 
+	@DELIMITER:
+		posix: '/'
+		windows: '\\'
+
+	@ROOT_DIRECTORY:
+		posix: fs.DELIMITER.posix
+		windows: 'c:'
+
+
+	_options: null
+
 	_data: null
 
 	_fileDescriptors: null
@@ -30,12 +41,36 @@ class fs
 	_fileDescriptorsCounter: 0
 
 
-	constructor: (tree = {}, info = {}) ->
+	constructor: (tree = {}, options = {}) ->
 		@_data = {}
 		@_fileDescriptors = []
 
-		@_addPath('/', {})
-		@_setTree(tree, info)
+		if typeof options.windows == 'undefined' then options.windows = false
+		if typeof options.root == 'undefined' then options.root = (if options.windows then fs.ROOT_DIRECTORY.windows else fs.ROOT_DIRECTORY.posix)
+		if typeof options.drives == 'undefined' then options.drives = []
+
+		if options.root
+			options.root = Helpers.normalizePath(options.windows, options.root)
+			if options.windows
+				options.root = Helpers.normalizeDriveWindows(options.root)
+
+			options._root = escape(options.root)
+
+		options.delimiter = (if options.windows then fs.DELIMITER.windows else fs.DELIMITER.posix)
+		options._delimiter = escape(options.delimiter)
+
+		if !options.windows && options.drives.length > 0
+			throw new Error 'Options drive can be used only with windows options.'
+
+		@_options = options
+
+		if options.root
+			@_addPath(options.root, null, null, true)
+
+		for drive in options.drives
+			@_addPath(Helpers.normalizeDriveWindows(drive), null, null, true)
+
+		@_setTree(tree, {})
 
 
 	_hasFd: (fd) ->
@@ -54,7 +89,7 @@ class fs
 		@_data[path].stats._setAttributes(attributes)
 
 
-	_addPath: (path, data = '', info = {}) ->
+	_addPath: (path, data = '', info = {}, root = false) ->
 		if typeof info.stats == 'undefined' then info.stats = {}
 		if typeof info.mode == 'undefined' then info.mode = 777
 		if typeof info.encoding == 'undefined' then info.encoding = 'utf8'
@@ -79,7 +114,8 @@ class fs
 		else
 			throw new Error 'Unknown type'
 
-		path = _path.join('/', path)
+		if !root && @_options.root && path.match(new RegExp('^' + @_options._root)) == null
+			path = Helpers.joinPaths(@_options.windows, @_options.root, path)
 
 		stats = new Stats(path, info.stats)
 		stats.mode = info.mode
@@ -95,7 +131,7 @@ class fs
 
 				if typeof info.paths != 'undefined'
 					for subPath, subData of info.paths
-						@_addPath(_path.join(path, subPath), subData)
+						@_addPath(Helpers.joinPaths(@_options.windows, path, subPath), subData)
 
 			when 'file'
 				stats._isFile = true
@@ -124,14 +160,14 @@ class fs
 
 
 	_expandPath: (path) ->
-		match = path.match(/\//g)
+		match = path.match(new RegExp(@_options._delimiter, 'g'))
 
 		if match != null && match.length > 1
 			sub = path
 			while sub != null
-				position = sub.lastIndexOf('/')
+				position = sub.lastIndexOf(@_options.delimiter)
 				if position > 0
-					sub = sub.substring(0, sub.lastIndexOf('/'))
+					sub = sub.substring(0, sub.lastIndexOf(@_options.delimiter))
 					if typeof @_data[sub] == 'undefined'
 						@_addPath(sub, {})
 				else
@@ -150,9 +186,9 @@ class fs
 
 	_realpath: (path) ->
 		if path[0] == '.'
-			path = _path.join('/', path)
+			path = Helpers.joinPaths(@_options.windows, @_options.delimiter, path)
 
-		return _path.normalize(path)
+		return Helpers.normalizePath(@_options.windows, path)
 
 
 	_getSourcePath: (path) ->
@@ -650,13 +686,13 @@ class fs
 		if !@statSync(path).isDirectory()
 			Errors.notDirectory(path)
 
-		path = if path == '/' then '' else path
+		path = if path == @_options.delimiter then '' else path
 		path = escape(path)
 		files = []
 
 		for name, data of @_data
-			if name != path && name != '/' && (match = name.match(new RegExp('^' + path + '(.+)$'))) != null
-				slashes = match[1].match(/\//g)
+			if name != path && name != @_options.delimiter && (match = name.match(new RegExp('^' + path + '(.+)$'))) != null
+				slashes = match[1].match(new RegExp(@_options._delimiter, 'g'))
 				slashes = if slashes == null then 0 else slashes.length
 				if slashes == 1
 					files.push(match[1].substr(1))
