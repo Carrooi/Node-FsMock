@@ -174,6 +174,11 @@ $ npm test
 
 ## Changelog
 
+* 1.1.1
+	+ Setup coffee-script for development
+	+ createReadStream/createWriteStream send error events instead of exceptions
+	+ createReadStream could not use custom `fd` in options
+
 * 1.1.0
 	+ Added support for windows file systems
 	+ Added many tests

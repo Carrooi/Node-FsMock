@@ -1102,26 +1102,42 @@ describe 'fs.windows', ->
 
 	describe '#createReadStream()', ->
 
-		it 'should return an error if file does not exists', ->
-			expect( -> fs.createReadStream('c:\\xampp\\htdocs\\index.php') ).to.throw(Error, "File or directory 'c:\\xampp\\htdocs\\index.php' does not exists.")
+		it 'should emit an error event if file does not exist', (done) ->
+			rs = fs.createReadStream('c:\\xampp\\htdocs\\index.php')
+			rs.on 'error', (err) ->
+				expect(err).to.be.an.instanceof(Error)
+				done()
 
 		it 'should create readable stream', (done) ->
 			fs.writeFileSync('c:\\xampp\\htdocs\\index.php', 'hello word')
-			rs = fs.createReadStream('c:\\xampp\\htdocs\\index.php').on 'readable', ->
-				buf = rs.read()
-				if buf != null
-					expect(buf.toString('utf8')).to.be.equal('hello word')
-				else
-					done()
+			rs = fs.createReadStream('c:\\xampp\\htdocs\\index.php')
+			rs.setEncoding('utf8')
+
+			rs.on 'data', (chunk) ->
+				expect(chunk).to.be.equal('hello word')
+				done()
 
 		it 'should create readable stream with start and end', (done) ->
 			fs.writeFileSync('c:\\xampp\\htdocs\\index.php', 'hello word')
-			rs = fs.createReadStream('c:\\xampp\\htdocs\\index.php', start: 6, end: 10).on 'readable', ->
-				buf = rs.read()
-				if buf != null
-					expect(buf.toString('utf8')).to.be.equal('word')
-				else
-					done()
+			rs = fs.createReadStream('c:\\xampp\\htdocs\\index.php', start: 6, end: 10)
+			rs.setEncoding('utf8')
+
+			rs.on 'data', (chunk) ->
+				expect(chunk).to.be.equal('word')
+				done()
+
+		it 'should create readable stream with custom fd', (done) ->
+			fs.writeFileSync('c:\\xampp\\htdocs\\index.php', 'hello word')
+			fd = fs.openSync('c:\\xampp\\htdocs\\index.php', 'r', 666)
+			rs = fs.createReadStream('c:\\xampp\\htdocs\\index.php', {fd: fd, autoClose: false})
+
+			rs.setEncoding('utf8')
+			rs.on 'data', (chunk) ->
+				expect(chunk).to.be.equal('hello word')
+				expect(fs._hasFd(fd)).to.be.true
+
+				fs.closeSync(fd)
+				done()
 
 
 	#*******************************************************************************************************************
@@ -1131,8 +1147,20 @@ describe 'fs.windows', ->
 
 	describe '#createWriteStream()', ->
 
-		it 'should return an error if file does not exists', ->
-			expect( -> fs.createReadStream('c:\\xampp\\htdocs\\index.php') ).to.throw(Error, "File or directory 'c:\\xampp\\htdocs\\index.php' does not exists.")
+		it 'should emit an error event if mode is wx and file already exists', (done) ->
+			fs.writeFileSync('c:\\xampp\\htdocs\\index.php', '')
+			ws = fs.createWriteStream('c:\\xampp\\htdocs\\index.php', {flags: 'wx'})
+			ws.on 'error', (err) ->
+				expect(err).to.be.an.instanceof(Error)
+				done()
+
+		it 'should emit an error event if file is a directory', (done) ->
+			fs.mkdirSync('c:\\xampp\\htdocs')
+			ws = fs.createWriteStream('c:\\xampp\\htdocs')
+			ws.on 'error', (err) ->
+				expect(err).to.be.an.instanceof(Error)
+				done()
+			ws.write('hello')
 
 		it 'should create writable stream', (done) ->
 			fs.writeFileSync('c:\\xampp\\htdocs\\index.php', '')
