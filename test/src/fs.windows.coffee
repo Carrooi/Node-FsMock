@@ -1110,21 +1110,34 @@ describe 'fs.windows', ->
 
 		it 'should create readable stream', (done) ->
 			fs.writeFileSync('c:\\xampp\\htdocs\\index.php', 'hello word')
-			rs = fs.createReadStream('c:\\xampp\\htdocs\\index.php').on 'readable', ->
-				buf = rs.read()
-				if buf != null
-					expect(buf.toString('utf8')).to.be.equal('hello word')
-				else
-					done()
+			rs = fs.createReadStream('c:\\xampp\\htdocs\\index.php')
+			rs.setEncoding('utf8')
+
+			rs.on 'data', (chunk) ->
+				expect(chunk).to.be.equal('hello word')
+				done()
 
 		it 'should create readable stream with start and end', (done) ->
 			fs.writeFileSync('c:\\xampp\\htdocs\\index.php', 'hello word')
-			rs = fs.createReadStream('c:\\xampp\\htdocs\\index.php', start: 6, end: 10).on 'readable', ->
-				buf = rs.read()
-				if buf != null
-					expect(buf.toString('utf8')).to.be.equal('word')
-				else
-					done()
+			rs = fs.createReadStream('c:\\xampp\\htdocs\\index.php', start: 6, end: 10)
+			rs.setEncoding('utf8')
+
+			rs.on 'data', (chunk) ->
+				expect(chunk).to.be.equal('word')
+				done()
+
+		it 'should create readable stream with custom fd', (done) ->
+			fs.writeFileSync('c:\\xampp\\htdocs\\index.php', 'hello word')
+			fd = fs.openSync('c:\\xampp\\htdocs\\index.php', 'r', 666)
+			rs = fs.createReadStream('c:\\xampp\\htdocs\\index.php', {fd: fd, autoClose: false})
+
+			rs.setEncoding('utf8')
+			rs.on 'data', (chunk) ->
+				expect(chunk).to.be.equal('hello word')
+				expect(fs._hasFd(fd)).to.be.true
+
+				fs.closeSync(fd)
+				done()
 
 
 	#*******************************************************************************************************************

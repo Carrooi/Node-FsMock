@@ -1074,13 +1074,13 @@ class fs
 
 		try
 			if options.fd == null
-				fd = @openSync(path, options.flags, options.mode)
+				options.fd = @openSync(path, options.flags, options.mode)
 
-			size = @fstatSync(fd).size
+			size = @fstatSync(options.fd).size
 
 			buffer = new Buffer(size)
 
-			@readSync(fd, buffer, 0, size, 0)
+			@readSync(options.fd, buffer, 0, size, 0)
 
 			data = buffer.toString(options.encoding)
 			if options.start != null && options.end != null
@@ -1090,7 +1090,7 @@ class fs
 			rs.push(null)
 
 			if options.autoClose
-				@closeSync(fd)
+				@closeSync(options.fd)
 		catch err
 			process.nextTick ->
 				rs.emit('error', err)
