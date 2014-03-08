@@ -1070,26 +1070,30 @@ class fs
 		if typeof options.start == 'undefined' then options.start = null
 		if typeof options.end == 'undefined' then options.end = null
 
-		if options.fd == null
-			fd = @openSync(path, options.flags, options.mode)
-
-		size = @fstatSync(fd).size
-
 		rs = new Readable
-		buffer = new Buffer(size)
 
-		@readSync(fd, buffer, 0, size, 0)
+		try
+			if options.fd == null
+				fd = @openSync(path, options.flags, options.mode)
 
-		data = buffer.toString(options.encoding)
-		if options.start != null && options.end != null
-			data = data.substring(options.start, options.end)
+			size = @fstatSync(fd).size
 
-		rs.push(data)
-		rs.push(null)
+			buffer = new Buffer(size)
 
-		if options.autoClose
-			@closeSync(fd)
+			@readSync(fd, buffer, 0, size, 0)
 
+			data = buffer.toString(options.encoding)
+			if options.start != null && options.end != null
+				data = data.substring(options.start, options.end)
+
+			rs.push(data)
+			rs.push(null)
+
+			if options.autoClose
+				@closeSync(fd)
+		catch err
+			process.nextTick ->
+				rs.emit('error', err)
 		return rs
 
 
@@ -1104,18 +1108,24 @@ class fs
 		if typeof options.mode == 'undefined' then options.mode = 666
 		if typeof options.start == 'undefined' then options.start = 0
 
-		fd = @openSync(path, options.flags, options.mode)
+		ws = Writable()
+
+		try
+			fd = @openSync(path, options.flags, options.mode)
+		catch err
+			process.nextTick ->
+				ws.emit('error', err)
 
 		position = options.start
 
-		ws = Writable()
 		ws._write = (chunk, enc, next) =>
 			if typeof chunk == 'string'
 				chunk = new Buffer(chunk)
 
 			@write(fd, chunk, 0, chunk.length, position, (err) ->
 				if err
-					throw err
+					process.nextTick ->
+						ws.emit('error', err)
 
 				position += chunk.length
 				next()
