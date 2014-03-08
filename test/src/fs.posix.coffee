@@ -1072,8 +1072,11 @@ describe 'fs.posix', ->
 
 	describe '#createReadStream()', ->
 
-		it 'should return an error if file does not exists', ->
-			expect( -> fs.createReadStream('/var/www/index.php') ).to.throw(Error, "File or directory '/var/www/index.php' does not exists.")
+		it 'should emit an error event if file does not exist', (done) ->
+			rs = fs.createReadStream('/var/www/index.php')
+			rs.on 'error', (err) ->
+				expect(err).to.be.an.instanceof(Error)
+				done()
 
 		it 'should create readable stream', (done) ->
 			fs.writeFileSync('/var/www/index.php', 'hello word')
@@ -1101,8 +1104,20 @@ describe 'fs.posix', ->
 
 	describe '#createWriteStream()', ->
 
-		it 'should return an error if file does not exists', ->
-			expect( -> fs.createReadStream('/var/www/index.php') ).to.throw(Error, "File or directory '/var/www/index.php' does not exists.")
+		it 'should emit an error event if mode is wx and file already exists', (done) ->
+			fs.writeFileSync('/var/www/index.php', '')
+			ws = fs.createWriteStream('/var/www/index.php', {flags: 'wx'})
+			ws.on 'error', (err) ->
+				expect(err).to.be.an.instanceof(Error)
+				done()
+
+		it 'should emit an error event if file is a directory', (done) ->
+			fs.mkdirSync('/var/www')
+			ws = fs.createWriteStream('/var/www')
+			ws.on 'error', (err) ->
+				expect(err).to.be.an.instanceof(Error)
+				done()
+			ws.write('hello')
 
 		it 'should create writable stream', (done) ->
 			fs.writeFileSync('/var/www/index.php', '')
