@@ -174,6 +174,9 @@ $ npm test
 
 ## Changelog
 
+* 1.1.1
+	+ Setup coffee-script for development
+
 * 1.1.0
 	+ Added support for windows file systems
 	+ Added many tests
