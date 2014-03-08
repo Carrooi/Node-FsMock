@@ -1080,21 +1080,34 @@ describe 'fs.posix', ->
 
 		it 'should create readable stream', (done) ->
 			fs.writeFileSync('/var/www/index.php', 'hello word')
-			rs = fs.createReadStream('/var/www/index.php').on 'readable', ->
-				buf = rs.read()
-				if buf != null
-					expect(buf.toString('utf8')).to.be.equal('hello word')
-				else
-					done()
+			rs = fs.createReadStream('/var/www/index.php')
+			rs.setEncoding('utf8')
+
+			rs.on 'data', (chunk) ->
+				expect(chunk).to.be.equal('hello word')
+				done()
 
 		it 'should create readable stream with start and end', (done) ->
 			fs.writeFileSync('/var/www/index.php', 'hello word')
-			rs = fs.createReadStream('/var/www/index.php', start: 6, end: 10).on 'readable', ->
-				buf = rs.read()
-				if buf != null
-					expect(buf.toString('utf8')).to.be.equal('word')
-				else
-					done()
+			rs = fs.createReadStream('/var/www/index.php', start: 6, end: 10)
+			rs.setEncoding('utf8')
+
+			rs.on 'data', (chunk) ->
+				expect(chunk).to.be.equal('word')
+				done()
+
+		it 'should create readable stream with custom fd', (done) ->
+			fs.writeFileSync('/var/www/index.php', 'hello word')
+			fd = fs.openSync('/var/www/index.php', 'r', 666)
+			rs = fs.createReadStream('/var/www/index.php', {fd: fd, autoClose: false})
+
+			rs.setEncoding('utf8')
+			rs.on 'data', (chunk) ->
+				expect(chunk).to.be.equal('hello word')
+				expect(fs._hasFd(fd)).to.be.true
+
+				fs.closeSync(fd)
+				done()
 
 
 	#*******************************************************************************************************************
