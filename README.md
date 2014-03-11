@@ -174,6 +174,9 @@ $ npm test
 
 ## Changelog
 
+* 1.1.2
+	+ Bug with createWriteStream sending improper 'finish' event
+
 * 1.1.1
 	+ Setup coffee-script for development
 	+ createReadStream/createWriteStream send error events instead of exceptions

@@ -1124,6 +1124,18 @@ describe 'fs.posix', ->
 				expect(err).to.be.an.instanceof(Error)
 				done()
 
+		it 'should not emit an finish event when valid read stream is piped to invalid write stream', (done) ->
+			fs.mkdirSync('/var/www')
+			fs.writeFileSync('/var/www/index.php', 'hello')
+			rs = fs.createReadStream('/var/www/index.php')
+
+			ws = fs.createWriteStream('/var/www')
+			ws.on 'finish', ->
+				throw new Error("should not finish")
+			ws.on 'error', (err) ->
+				done()
+			rs.pipe(ws)
+
 		it 'should emit an error event if file is a directory', (done) ->
 			fs.mkdirSync('/var/www')
 			ws = fs.createWriteStream('/var/www')
