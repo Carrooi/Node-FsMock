@@ -1123,12 +1123,8 @@ class fs
 				chunk = new Buffer(chunk)
 
 			@write(fd, chunk, 0, chunk.length, position, (err) ->
-				if err
-					process.nextTick ->
-						ws.emit('error', err)
-
 				position += chunk.length
-				next()
+				next(err)
 			)
 
 		ws.on 'finish', =>
