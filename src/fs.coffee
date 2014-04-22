@@ -106,7 +106,9 @@ class fs
 		else if typeof data == 'string'
 			type = 'file'
 			info = {data: data}
-
+		else if data instanceof Buffer
+			type = 'file'
+			info = {data: data}
 		else if Object.prototype.toString.call(data) == '[object Object]'
 			type = 'directory'
 			info = {paths: data}
