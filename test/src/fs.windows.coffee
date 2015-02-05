@@ -1102,6 +1102,20 @@ describe 'fs.windows', ->
 
 	describe '#createReadStream()', ->
 
+		it 'should emit an open event with the file descriptor when it opens a file', (done) ->
+			fs.writeFileSync('c:\\xampp\\htdocs\\index.php', '')
+			rs = fs.createReadStream('c:\\xampp\\htdocs\\index.php')
+			rs.on 'open', (fd) ->
+				expect(fd).to.be.a('number')
+				done()
+
+		it 'should not emit an open event if file does not exist', (done) ->
+			rs = fs.createReadStream('c:\\xampp\\htdocs\\index.php')
+			rs.on 'open', (fd) ->
+				expect().fail()
+			rs.on 'error', (err) ->
+				done()
+
 		it 'should emit an error event if file does not exist', (done) ->
 			rs = fs.createReadStream('c:\\xampp\\htdocs\\index.php')
 			rs.on 'error', (err) ->
@@ -1146,6 +1160,21 @@ describe 'fs.windows', ->
 
 
 	describe '#createWriteStream()', ->
+
+		it 'should emit an open event with the file descriptor when it opens a file', (done) ->
+			fs.writeFileSync('c:\\xampp\\htdocs\\index.php', '')
+			ws = fs.createWriteStream('/var/www/index.php')
+			ws.on 'open', (fd) ->
+				expect(fd).to.be.a('number')
+				done()
+
+		it 'should not emit an open event if creating write stream fails', (done) ->
+			fs.writeFileSync('c:\\xampp\\htdocs\\index.php', '')
+			ws = fs.createWriteStream('c:\\xampp\\htdocs\\index.php', {flags: 'wx'})
+			ws.on 'open', (fd) ->
+				expect().fail()
+			ws.on 'error', (err) ->
+				done()
 
 		it 'should emit an error event if mode is wx and file already exists', (done) ->
 			fs.writeFileSync('c:\\xampp\\htdocs\\index.php', '')

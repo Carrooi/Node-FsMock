@@ -1076,6 +1076,9 @@ class fs
 			if options.fd == null
 				options.fd = @openSync(path, options.flags, options.mode)
 
+			process.nextTick ->
+				rs.emit('open', options.fd)
+
 			size = @fstatSync(options.fd).size
 
 			buffer = new Buffer(size)
@@ -1112,6 +1115,8 @@ class fs
 
 		try
 			fd = @openSync(path, options.flags, options.mode)
+			process.nextTick ->
+				ws.emit('open', fd)
 		catch err
 			process.nextTick ->
 				ws.emit('error', err)
