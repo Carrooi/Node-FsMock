@@ -174,6 +174,9 @@ $ npm test
 
 ## Changelog
 
+* 1.1.3
+	+ Bug with createReadStream and createWriteStream not emitting 'open' event
+
 * 1.1.2
 	+ Bug with createWriteStream sending improper 'finish' event
 
