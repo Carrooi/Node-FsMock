@@ -1,10 +1,10 @@
-[![NPM version](https://badge.fury.io/js/fs-mock.png)](http://badge.fury.io/js/fs-mock)
-[![Dependency Status](https://gemnasium.com/sakren/node-fs-mock.png)](https://gemnasium.com/sakren/node-fs-mock)
-[![Build Status](https://travis-ci.org/sakren/node-fs-mock.png?branch=master)](https://travis-ci.org/sakren/node-fs-mock)
-
-[![Donate](http://b.repl.ca/v1/donate-PayPal-brightgreen.png)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=89MDP3DHWXYPW)
-
 # fs-mock
+
+[![NPM version](https://img.shields.io/npm/v/fs-mock.svg?style=flat-square)](http://badge.fury.io/js/fs-mock)
+[![Dependency Status](https://img.shields.io/gemnasium/sakren/node-fs-mock.svg?style=flat-square)](https://gemnasium.com/sakren/node-fs-mock)
+[![Build Status](https://img.shields.io/travis/sakren/node-fs-mock.svg?style=flat-square)](https://travis-ci.org/sakren/node-fs-mock)
+
+[![Donate](https://img.shields.io/badge/donate-PayPal-brightgreen.svg?style=flat-square)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=89MDP3DHWXYPW)
 
 Simple fs mock with posix and windows file system styles.
 
@@ -175,7 +175,7 @@ $ npm test
 ## Changelog
 
 * 1.1.3
-	+ Bug with createReadStream and createWriteStream not emitting 'open' event
+	+ Bug with createReadStream and createWriteStream not emitting 'open' event [#10](https://github.com/sakren/node-fs-mock/pull/10)
 
 * 1.1.2
 	+ Bug with createWriteStream sending improper 'finish' event
