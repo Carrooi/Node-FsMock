@@ -358,6 +358,21 @@
 				});
 			});
 
+			// issue #11
+			it('should return stats object from unbound method', function (done) {
+				var stat;
+
+				stat = fs.stat;
+
+				fs.writeFileSync('/var/www/index.php', '');
+
+				stat('/var/www/index.php', function (err, stats) {
+					expect(stats).to.be.an.instanceof(Stats);
+					expect(stats.isFile()).to.be.true;
+					done();
+				});
+			});
+
 		});
 
 

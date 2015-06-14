@@ -10,6 +10,13 @@
 	var Helpers = require('./Helpers');
 
 
+	var bind = function(fn, self) {
+		return function() {
+			return fn.apply(self, arguments);
+		};
+	};
+
+
 	var isFunction = function(obj) {
 		return Object.prototype.toString.call(obj) === '[object Function]';
 	};
@@ -34,9 +41,11 @@
 		if (typeof time === 'number') {
 			return new Date(time * 1000);
 		}
+
 		if (time instanceof Date) {
 			return time;
 		}
+
 		throw new Error("Cannot parse time: " + time);
 	};
 
@@ -95,6 +104,74 @@
 		}
 
 		this._setTree(tree, {});
+
+		this.rename = bind(this.rename, this);
+		this.renameSync = bind(this.renameSync, this);
+		this.ftruncate = bind(this.ftruncate, this);
+		this.ftruncateSync = bind(this.ftruncateSync, this);
+		this.truncate = bind(this.truncate, this);
+		this.truncateSync = bind(this.truncateSync, this);
+		this.chown = bind(this.chown, this);
+		this.chownSync = bind(this.chownSync, this);
+		this.fchown = bind(this.fchown, this);
+		this.fchownSync = bind(this.fchownSync, this);
+		this.lchown = bind(this.lchown, this);
+		this.lchownSync = bind(this.lchownSync, this);
+		this.chmod = bind(this.chmod, this);
+		this.chmodSync = bind(this.chmodSync, this);
+		this.fchmod = bind(this.fchmod, this);
+		this.fchmodSync = bind(this.fchmodSync, this);
+		this.lchmod = bind(this.lchmod, this);
+		this.lchmodSync = bind(this.lchmodSync, this);
+		this.stat = bind(this.stat, this);
+		this.statSync = bind(this.statSync, this);
+		this.lstat = bind(this.lstat, this);
+		this.lstatSync = bind(this.lstatSync, this);
+		this.fstat = bind(this.fstat, this);
+		this.fstatSync = bind(this.fstatSync, this);
+		this.link = bind(this.link, this);
+		this.linkSync = bind(this.linkSync, this);
+		this.symlink = bind(this.symlink, this);
+		this.symlinkSync = bind(this.symlinkSync, this);
+		this.readlink = bind(this.readlink, this);
+		this.readlinkSync = bind(this.readlinkSync, this);
+		this.realpath = bind(this.realpath, this);
+		this.realpathSync = bind(this.realpathSync, this);
+		this.unlink = bind(this.unlink, this);
+		this.unlinkSync = bind(this.unlinkSync, this);
+		this.rmdir = bind(this.rmdir, this);
+		this.rmdirSync = bind(this.rmdirSync, this);
+		this.mkdir = bind(this.mkdir, this);
+		this.mkdirSync = bind(this.mkdirSync, this);
+		this.readdir = bind(this.readdir, this);
+		this.readdirSync = bind(this.readdirSync, this);
+		this.close = bind(this.close, this);
+		this.closeSync = bind(this.closeSync, this);
+		this.open = bind(this.open, this);
+		this.openSync = bind(this.openSync, this);
+		this.utimes = bind(this.utimes, this);
+		this.utimesSync = bind(this.utimesSync, this);
+		this.futimes = bind(this.futimes, this);
+		this.futimesSync = bind(this.futimesSync, this);
+		this.fsync = bind(this.fsync, this);
+		this.fsyncSync = bind(this.fsyncSync, this);
+		this.write = bind(this.write, this);
+		this.writeSync = bind(this.writeSync, this);
+		this.read = bind(this.read, this);
+		this.readSync = bind(this.readSync, this);
+		this.readFile = bind(this.readFile, this);
+		this.readFileSync = bind(this.readFileSync, this);
+		this.writeFile = bind(this.writeFile, this);
+		this.writeFileSync = bind(this.writeFileSync, this);
+		this.appendFile = bind(this.appendFile, this);
+		this.appendFileSync = bind(this.appendFileSync, this);
+		this.watchFile = bind(this.watchFile, this);
+		this.unwatchFile = bind(this.unwatchFile, this);
+		this.watch = bind(this.watch, this);
+		this.exists = bind(this.exists, this);
+		this.existsSync = bind(this.existsSync, this);
+		this.createReadStream = bind(this.createReadStream, this);
+		this.createWriteStream = bind(this.createWriteStream, this);
 	};
 
 
