@@ -1,6 +1,6 @@
 (function() {
 
-	var FS = require('../lib/fs');
+	var FS = require('../src/fs');
 
 	var expect = require('chai').expect;
 

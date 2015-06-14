@@ -1,7 +1,7 @@
 (function() {
 
-	var FS = require('../lib/fs');
-	var Stats = require('../lib/Stats');
+	var FS = require('../src/fs');
+	var Stats = require('../src/Stats');
 
 	var expect = require('chai').expect;
 
