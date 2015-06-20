@@ -41,6 +41,10 @@
 				expect(Helpers.normalizePathWindows('c:/xampp/../xampp/htdocs/../../././xampp/htdocs/index.php')).to.be.equal('c:\\xampp\\htdocs\\index.php');
 			});
 
+			it('should return normalized drive', function() {
+				expect(Helpers.normalizePathWindows('c:')).to.be.equal('c:');
+			});
+
 		});
 
 

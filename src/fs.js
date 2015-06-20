@@ -292,6 +292,8 @@
 			path = Helpers.joinPaths(this._options.windows, this._options.root, path);
 		}
 
+		path = Helpers.normalizePath(this._options.windows, path);
+
 		stats = new Stats(path, info.stats);
 		stats.mode = info.mode;
 

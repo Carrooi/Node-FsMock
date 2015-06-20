@@ -133,6 +133,10 @@
 	Helpers.normalizePathWindows = function (path) {
 		var device, isAbsolute, isUnc, result, tail, trailingSlash;
 
+		if (/^[a-z]:$/.test(path)) {
+			return path;
+		}
+
 		result = splitDeviceRe.exec(path);
 		device = result[1] || '';
 		isUnc = device && device.charAt(1) !== ':';
