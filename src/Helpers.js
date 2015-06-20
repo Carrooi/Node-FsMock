@@ -200,7 +200,7 @@
 
 		result = splitDeviceRe.exec(path);
 		device = result[1] || '';
-		isUnc = device && device.charAt(1) !== ':';
+		isUnc = device !== '' && device.charAt(1) !== ':';
 
 		return !!result[2] || isUnc;
 	};
