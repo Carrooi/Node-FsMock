@@ -700,10 +700,6 @@
 
 		stats = this._data[path].stats;
 
-		if (!stats.isSymbolicLink()) {
-			Errors.notSymlink(path);
-		}
-
 		return stats;
 	};
 

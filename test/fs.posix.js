@@ -395,11 +395,10 @@
 				});
 			});
 
-			it('should return an error if path is not a symlink', function (done) {
+			it('should return for regular file', function (done) {
 				fs.mkdirSync('/var/www');
-				fs.lstat('/var/www', function (err) {
-					expect(err).to.be.an.instanceof(Error);
-					expect(err.message).to.be.equal("Path '/var/www' is not a symbolic link.");
+				fs.lstat('/var/www', function (err, stats) {
+					expect(stats.isDirectory()).to.be.true;
 					done();
 				});
 			});
