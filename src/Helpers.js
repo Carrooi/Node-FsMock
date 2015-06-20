@@ -131,7 +131,7 @@
 
 
 	Helpers.normalizePathWindows = function (path) {
-		var device, isAbsolute, isUnc, result, tail, trailingSlash;
+		var device, isAbsolute, isUnc, result, tail;
 
 		if (/^[a-z]:$/.test(path)) {
 			return path;
@@ -142,7 +142,6 @@
 		isUnc = device && device.charAt(1) !== ':';
 		isAbsolute = Helpers.isAbsoluteWindows(path);
 		tail = result[3];
-		trailingSlash = /[\\\/]$/.test(tail);
 
 		if (device && device.charAt(1) === ':') {
 			device = device[0].toLowerCase() + device.substr(1);
@@ -156,10 +155,6 @@
 			tail = '.';
 		}
 
-		if (tail && trailingSlash) {
-			tail += '\\';
-		}
-
 		if (isUnc) {
 			device = Helpers.normalizeUNCRoot(device);
 		}
@@ -169,10 +164,9 @@
 
 
 	Helpers.normalizePathPosix = function (path) {
-		var i, isAbsolute, nonEmptySegments, segments, trailingSlash;
+		var i, isAbsolute, nonEmptySegments, segments;
 
 		isAbsolute = Helpers.isAbsolutePosix(path);
-		trailingSlash = path[path.length - 1] === '/';
 		segments = path.split('/');
 		nonEmptySegments = [];
 		i = 0;
@@ -189,10 +183,6 @@
 
 		if (!path && !isAbsolute) {
 			path = '.';
-		}
-
-		if (path && trailingSlash) {
-			path += '/';
 		}
 
 		return (isAbsolute ? '/' : '') + path;

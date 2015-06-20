@@ -45,6 +45,10 @@
 				expect(Helpers.normalizePathWindows('c:')).to.be.equal('c:');
 			});
 
+			it('should return normalized path with trailing /', function() {
+				expect(Helpers.normalizePathWindows('c:\\xampp\\htdocs\\')).to.be.equal('c:\\xampp\\htdocs');
+			});
+
 		});
 
 
@@ -52,6 +56,10 @@
 
 			it('should return normalized posix path', function() {
 				expect(Helpers.normalizePathPosix('/var/../var/www/../../././var/www/index.php')).to.be.equal('/var/www/index.php');
+			});
+
+			it('should return normalized path with trailing /', function() {
+				expect(Helpers.normalizePathPosix('/var/www/')).to.be.equal('/var/www');
 			});
 
 		});

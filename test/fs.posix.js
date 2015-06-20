@@ -1164,6 +1164,15 @@
 				});
 			});
 
+			// @see https://github.com/sakren/node-fs-mock/issues/13
+			it('should return true when directory exists (w/trailing /)', function(done) {
+				fs.writeFileSync('/var/www/index.php', '');
+				fs.exists('/var/www/', function(exists) {
+					expect(exists).to.be.true;
+					done();
+				});
+			});
+
 		});
 
 
