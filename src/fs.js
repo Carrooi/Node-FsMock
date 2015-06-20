@@ -259,7 +259,13 @@
 			return this.linkSync(data, path.substr(1));
 		}
 
-		if (path[0] === '%') {
+		if (root) {
+			type = 'directory';
+			info = {
+				paths: {}
+			};
+
+		} else if (path[0] === '%') {
 			type = 'symlink';
 			path = path.substr(1);
 			info = {

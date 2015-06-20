@@ -43,6 +43,15 @@
 				expect(fs.statSync('/home/john/passwords.txt').isFile()).to.be.true;
 			});
 
+			// @see https://github.com/sakren/node-fs-mock/issues/15
+			it('should create root directory', function() {
+				fs = new FS({
+					'var/www/index.php': ''
+				});
+
+				expect(fs.statSync('/').isDirectory()).to.be.true;
+			});
+
 		});
 
 
