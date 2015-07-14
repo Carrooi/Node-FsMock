@@ -272,7 +272,7 @@
 				source: data
 			};
 
-		} else if (typeof data === 'string') {
+		} else if (typeof data === 'string' || data instanceof Buffer) {
 			type = 'file';
 			info = {
 				data: data
