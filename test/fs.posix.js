@@ -43,7 +43,7 @@
 				expect(fs.statSync('/home/john/passwords.txt').isFile()).to.be.true;
 			});
 
-			// @see https://github.com/sakren/node-fs-mock/issues/15
+			// @see https://github.com/Carrooi/Node-FsMock/issues/15
 			it('should create root directory', function() {
 				fs = new FS({
 					'var/www/index.php': ''
@@ -1163,7 +1163,7 @@
 				});
 			});
 
-			// @see https://github.com/sakren/node-fs-mock/issues/13
+			// @see https://github.com/Carrooi/Node-FsMock/issues/13
 			it('should return true when directory exists (w/trailing /)', function(done) {
 				fs.writeFileSync('/var/www/index.php', '');
 				fs.exists('/var/www/', function(exists) {
