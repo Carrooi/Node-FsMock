@@ -1,12 +1,20 @@
 # fs-mock
 
 [![NPM version](https://img.shields.io/npm/v/fs-mock.svg?style=flat-square)](http://badge.fury.io/js/fs-mock)
-[![Dependency Status](https://img.shields.io/gemnasium/sakren/node-fs-mock.svg?style=flat-square)](https://gemnasium.com/sakren/node-fs-mock)
-[![Build Status](https://img.shields.io/travis/sakren/node-fs-mock.svg?style=flat-square)](https://travis-ci.org/sakren/node-fs-mock)
+[![Dependency Status](https://img.shields.io/gemnasium/Carrooi/Node-FsMock.svg?style=flat-square)](https://gemnasium.com/Carrooi/Node-FsMock)
+[![Build Status](https://img.shields.io/travis/Carrooi/Node-FsMock.svg?style=flat-square)](https://travis-ci.org/Carrooi/Node-FsMock)
 
 [![Donate](https://img.shields.io/badge/donate-PayPal-brightgreen.svg?style=flat-square)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=89MDP3DHWXYPW)
 
 Simple fs mock with posix and windows file system styles.
+
+## Help
+
+Unfortunately I don't have any more time to maintain this repository :-( 
+
+Don't you want to save me and this project by taking over it?
+
+![sad cat](https://raw.githubusercontent.com/sakren/sakren.github.io/master/images/sad-kitten.jpg)
 
 ## Installation
 
@@ -174,8 +182,21 @@ $ npm test
 
 ## Changelog
 
+* 1.2.0
+	+ Move repository under Carrooi organization
+	+ Abandon project
+	+ Rewritten to pure javascript
+	+ Rebind all methods so they can be called event when they are unbound [#11](https://github.com/Carrooi/Node-FsMock/issues/11)
+	+ Updated dependencies
+	+ Fixed root directories [#15](https://github.com/Carrooi/Node-FsMock/issues/15)
+	+ Added some tests
+	+ Some fixes for Windows
+	+ Fixed paths with trailing slashes [#13](https://github.com/Carrooi/Node-FsMock/issues/13)
+	+ Fixed lstat called on non symbolic links [#14](https://github.com/Carrooi/Node-FsMock/issues/14)
+	+ Allow writing raw buffer [#7](https://github.com/Carrooi/Node-FsMock/issues/7)
+
 * 1.1.3
-	+ Bug with createReadStream and createWriteStream not emitting 'open' event [#10](https://github.com/sakren/node-fs-mock/pull/10)
+	+ Bug with createReadStream and createWriteStream not emitting 'open' event [#10](https://github.com/Carrooi/Node-FsMock/pull/10)
 
 * 1.1.2
 	+ Bug with createWriteStream sending improper 'finish' event
