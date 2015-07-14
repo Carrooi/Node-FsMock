@@ -182,6 +182,19 @@ $ npm test
 
 ## Changelog
 
+* 1.2.0
+	+ Move repository under Carrooi organization
+	+ Abandon project
+	+ Rewritten to pure javascript
+	+ Rebind all methods so they can be called event when they are unbound [#11](https://github.com/Carrooi/Node-FsMock/issues/11)
+	+ Updated dependencies
+	+ Fixed root directories [#15](https://github.com/Carrooi/Node-FsMock/issues/15)
+	+ Added some tests
+	+ Some fixes for Windows
+	+ Fixed paths with trailing slashes [#13](https://github.com/Carrooi/Node-FsMock/issues/13)
+	+ Fixed lstat called on non symbolic links [#14](https://github.com/Carrooi/Node-FsMock/issues/14)
+	+ Allow writing raw buffer [#7](https://github.com/Carrooi/Node-FsMock/issues/7)
+
 * 1.1.3
 	+ Bug with createReadStream and createWriteStream not emitting 'open' event [#10](https://github.com/Carrooi/Node-FsMock/pull/10)
 
