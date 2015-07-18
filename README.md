@@ -182,7 +182,7 @@ $ npm test
 
 ## Changelog
 
-* 1.2.0
+* 1.2.0 - 1.2.1
 	+ Move repository under Carrooi organization
 	+ Abandon project
 	+ Rewritten to pure javascript
