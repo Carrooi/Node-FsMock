@@ -431,10 +431,10 @@
 	fs.prototype.rename = function(oldPath, newPath, callback) {
 		try {
 			this.renameSync(oldPath, newPath);
-			callback();
 		} catch (e) {
-			callback(e);
+			return callback(e);
 		}
+		return callback();
 	};
 
 
@@ -462,10 +462,10 @@
 	fs.prototype.ftruncate = function(fd, len, callback) {
 		try {
 			this.ftruncateSync(fd, len);
-			callback();
 		} catch (e) {
-			callback(e);
+			return callback(e);
 		}
+		return callback();
 	};
 
 
@@ -490,10 +490,10 @@
 	fs.prototype.truncate = function(path, len, callback) {
 		try {
 			this.truncateSync(path, len);
-			callback();
 		} catch (e) {
-			callback(e);
+			return callback(e);
 		}
+		return callback();
 	};
 
 
@@ -519,12 +519,14 @@
 
 
 	fs.prototype.chown = function(path, uid, gid, callback) {
+
 		try {
 			this.chownSync(path, uid, gid);
-			callback();
 		} catch (e) {
-			callback(e);
+			return callback(e);
 		}
+
+	  return callback();
 	};
 
 
@@ -543,10 +545,11 @@
 	fs.prototype.fchown = function(fd, uid, gid, callback) {
 		try {
 			this.fchownSync(fd, uid, gid);
-			callback();
 		} catch (e) {
-			callback(e);
+			return callback(e);
 		}
+
+		return callback();
 	};
 
 
@@ -565,10 +568,11 @@
 	fs.prototype.lchown = function(path, uid, gid, callback) {
 		try {
 			this.lchownSync(path, uid, gid);
-			callback(null);
 		} catch (e) {
-			callback(e);
+			return callback(e);
 		}
+
+		return callback(null);
 	};
 
 	fs.prototype.lchownSync = function(path, uid, gid) {
@@ -592,10 +596,10 @@
 	fs.prototype.chmod = function(path, mode, callback) {
 		try {
 			this.chmodSync(path, mode);
-			callback();
 		} catch (e) {
-			callback(e);
+			return callback(e);
 		}
+		return callback();
 	};
 
 
@@ -614,10 +618,10 @@
 	fs.prototype.fchmod = function(fd, mode, callback) {
 		try {
 			this.fchmodSync(fd, mode);
-			callback(null);
 		} catch (e) {
-			callback(e);
+			return callback(e);
 		}
+		return callback(null);
 	};
 
 
@@ -634,10 +638,10 @@
 	fs.prototype.lchmod = function(path, mode, callback) {
 		try {
 			this.lchmodSync(path, mode);
-			callback(null);
 		} catch (e) {
-			callback(e);
+			return callback(e);
 		}
+		return callback(null);
 	};
 
 
@@ -659,11 +663,15 @@
 
 
 	fs.prototype.stat = function(path, callback) {
+	  var stat;
+
 		try {
-			callback(null, this.statSync(path));
+			stat = this.statSync(path);
 		} catch (e) {
-			callback(e, null);
+			return callback(e, null);
 		}
+
+	  return callback(null, stat);
 	};
 
 
@@ -681,11 +689,15 @@
 
 
 	fs.prototype.lstat = function(path, callback) {
+	  var stat;
+
 		try {
-			callback(null, this.lstatSync(path));
+			stat = this.lstatSync(path);
 		} catch (e) {
-			callback(e, null);
+			return callback(e, null);
 		}
+
+	  return callback(null, stat);
 	};
 
 
@@ -705,11 +717,15 @@
 
 
 	fs.prototype.fstat = function(fd, callback) {
+	  var stat;
+
 		try {
-			callback(null, this.fstatSync(fd));
+			stat = this.fstatSync(fd);
 		} catch (e) {
-			callback(e, null);
+			return callback(e, null);
 		}
+
+	  return callback(null, stat);
 	};
 
 
@@ -723,12 +739,14 @@
 
 
 	fs.prototype.link = function(srcpath, dstpath, callback) {
+
 		try {
 			this.linkSync(srcpath, dstpath);
-			callback(null);
 		} catch (e) {
-			callback(e);
+			return callback(e);
 		}
+
+		return callback(null);
 	};
 
 
@@ -756,10 +774,10 @@
 
 		try {
 			this.symlinkSync(srcpath, dstpath);
-			callback(null);
 		} catch (e) {
-			callback(e);
+			return callback(e);
 		}
+		return callback(null);
 	};
 
 
@@ -780,11 +798,15 @@
 
 
 	fs.prototype.readlink = function(path, callback) {
+	  var linkString;
+
 		try {
-			callback(null, this.readlinkSync(path));
+			linkString = this.readlinkSync(path);
 		} catch (e) {
-			callback(e, null);
+			return callback(e, null);
 		}
+
+	  return callback(null, linkString);
 	};
 
 
@@ -809,11 +831,15 @@
 			cache = null;
 		}
 
+	  var resolvedPath;
+
 		try {
-			callback(null, this.realpathSync(path, cache));
+			resolvedPath = this.realpathSync(path, cache);
 		} catch (e) {
-			callback(e, null);
+			return callback(e, null);
 		}
+
+	  return callback(null, resolvedPath);
 	};
 
 
@@ -839,10 +865,11 @@
 	fs.prototype.unlink = function(path, callback) {
 		try {
 			this.unlinkSync(path);
-			callback();
 		} catch (e) {
-			callback(e);
+			return callback(e);
 		}
+
+	  return callback();
 	};
 
 
@@ -864,10 +891,11 @@
 	fs.prototype.rmdir = function(path, callback) {
 		try {
 			this.rmdirSync(path);
-			callback();
 		} catch (e) {
-			callback(e);
+			return callback(e);
 		}
+
+		return callback();
 	};
 
 
@@ -902,10 +930,11 @@
 
 		try {
 			this.mkdirSync(path, mode);
-			callback();
 		} catch (e) {
-			callback(e);
+			return callback(e);
 		}
+
+	  return callback();
 	};
 
 
@@ -929,11 +958,15 @@
 
 
 	fs.prototype.readdir = function(path, callback) {
+	  var files;
+
 		try {
-			callback(null, this.readdirSync(path));
+	    files = this.readdirSync(path);
 		} catch (e) {
-			callback(e, null);
+			return callback(e, null);
 		}
+
+		return callback(null, files);
 	};
 
 
@@ -971,10 +1004,11 @@
 	fs.prototype.close = function(fd, callback) {
 		try {
 			this.closeSync(fd);
-			callback();
 		} catch (e) {
-			callback(e);
+			return callback(e);
 		}
+
+	  return callback();
 	};
 
 
@@ -997,11 +1031,15 @@
 			mode = null;
 		}
 
+	  var fd;
+
 		try {
-			callback(null, this.openSync(path, flags, mode));
+			fd = this.openSync(path, flags, mode);
 		} catch (e) {
-			callback(e, null);
+			return callback(e, null);
 		}
+
+	  return callback(null, fd);
 	};
 
 
@@ -1043,10 +1081,11 @@
 	fs.prototype.utimes = function(path, atime, mtime, callback) {
 		try {
 			this.utimesSync(path, atime, mtime);
-			callback(null);
 		} catch (e) {
-			callback(e);
+			return callback(e);
 		}
+
+		return callback(null);
 	};
 
 
@@ -1064,10 +1103,11 @@
 	fs.prototype.futimes = function(fd, atime, mtime, callback) {
 		try {
 			this.futimesSync(fd, atime, mtime);
-			callback(null);
 		} catch (e) {
-			callback(e);
+			return callback(e);
 		}
+
+	  return callback(null);
 	};
 
 
@@ -1086,10 +1126,11 @@
 	fs.prototype.fsync = function(fd, callback) {
 		try {
 			this.fsyncSync(fd);
-			callback(null);
 		} catch (e) {
-			callback(e);
+			return callback(e);
 		}
+
+		return callback(null);
 	};
 
 
@@ -1111,14 +1152,11 @@
 
 		try {
 			this.writeSync(fd, buffer, offset, length, position);
-			if (callback !== null) {
-				callback(null, length, buffer);
-			}
 		} catch (e) {
-			if (callback !== null) {
-				callback(e, null, buffer);
-			}
+	    return callback && callback(e, null, buffer);
 		}
+
+	  return callback && callback(null, length, buffer);
 	};
 
 
@@ -1178,14 +1216,11 @@
 
 		try {
 			this.readSync(fd, buffer, offset, length, position);
-			if (callback !== null) {
-				callback(null, length, buffer);
-			}
 		} catch (e) {
-			if (callback !== null) {
-				callback(e, 0, buffer);
-			}
+			return callback && callback(e, 0, buffer);
 		}
+
+	  return callback && callback(null, length, buffer);
 	};
 
 
@@ -1234,11 +1269,15 @@
 			options = null;
 		}
 
+	  var content;
+
 		try {
-			callback(null, this.readFileSync(filename, options));
+	    content = this.readFileSync(filename, options);
 		} catch (e) {
-			callback(e, null);
+			return callback(e, null);
 		}
+
+		return callback(null, content);
 	};
 
 
@@ -1286,10 +1325,11 @@
 		}
 
 		try {
-			callback(null, this.writeFileSync(filename, data, options));
+			this.writeFileSync(filename, data, options);
 		} catch (e) {
-			callback(e, null);
+			return callback(e, null);
 		}
+	  return callback();
 	};
 
 
@@ -1332,10 +1372,12 @@
 		}
 
 		try {
-			callback(null, this.appendFileSync(filename, data, options));
+			this.appendFileSync(filename, data, options);
 		} catch (e) {
-			callback(e, null);
+			return callback(e, null);
 		}
+
+	  return callback();
 	};
 
 
@@ -1416,7 +1458,7 @@
 
 
 	fs.prototype.exists = function(path, callback) {
-		callback(this.existsSync(path));
+		return callback(this.existsSync(path));
 	};
 
 
@@ -1528,7 +1570,6 @@
 
 		try {
 			fd = this.openSync(path, options.flags, options.mode);
-
 			process.nextTick(function() {
 				ws.emit('open', fd);
 			});
